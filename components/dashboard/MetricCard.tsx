@@ -1,7 +1,7 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { ArrowDownRight, ArrowUpRight, Minus } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 
 import {
   Card,
@@ -14,10 +14,10 @@ import type { DashboardMetric } from "@/features/dashboard/service";
 
 export interface MetricCardProps {
   metric: DashboardMetric;
-  icon?: LucideIcon;
+  icon?: ReactNode;
 }
 
-export function MetricCard({ metric, icon: Icon }: MetricCardProps) {
+export function MetricCard({ metric, icon }: MetricCardProps) {
   const DeltaIcon =
     metric.direction === "up"
       ? ArrowUpRight
@@ -33,9 +33,9 @@ export function MetricCard({ metric, icon: Icon }: MetricCardProps) {
           <CardTitle className="text-3xl">{metric.value}</CardTitle>
         </div>
 
-        {Icon ? (
+        {icon ? (
           <span className="inline-grid h-11 w-11 place-items-center rounded-2xl border border-[color:var(--ui-border)] bg-[color:var(--ui-accent-soft)] text-[color:var(--ui-accent)]">
-            <Icon size={18} />
+            {icon}
           </span>
         ) : null}
       </CardHeader>

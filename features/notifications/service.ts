@@ -20,7 +20,6 @@ import type {
   NotificationCreateInput,
   NotificationFilters,
   NotificationRecord,
-  NotificationStatus,
   NotificationSummary,
   NotificationUpdateInput,
   NotificationViewModel,
@@ -47,18 +46,6 @@ function createRecordId(): string {
 
 function createTimestamp(): Date {
   return new Date();
-}
-
-function severityRank(status: NotificationStatus): number {
-  switch (status) {
-    case "unread":
-      return 3;
-    case "read":
-      return 2;
-    case "archived":
-    default:
-      return 1;
-  }
 }
 
 function matchesQuery(notification: NotificationRecord, query: string): boolean {

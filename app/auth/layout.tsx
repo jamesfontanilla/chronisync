@@ -1,3 +1,5 @@
+ "use client";
+
 import type { ReactNode } from "react";
 
 import { APP_CONFIG } from "@/config/app";

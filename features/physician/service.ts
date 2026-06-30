@@ -6,9 +6,9 @@
  */
 
 import { COLLECTIONS } from "@/config/firebase";
-import { buildDashboardSnapshot, type DashboardMetric, type DashboardTrendSeries } from "@/features/dashboard/service";
-import { listAlertViewModelsByFilters, listAlertsByPhysician } from "@/features/alerts/service";
-import { formatDateTime, getInitials } from "@/lib/utils";
+import { type DashboardMetric, type DashboardTrendSeries } from "@/features/dashboard/service";
+import { listAlertsByPhysician } from "@/features/alerts/service";
+import { getInitials } from "@/lib/utils";
 import { logger } from "@/lib/logger";
 import { queryDocuments, whereEquals } from "@/lib/firebase/firestore";
 import type { Alert } from "@/types/alert";

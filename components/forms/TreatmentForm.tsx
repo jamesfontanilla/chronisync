@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
@@ -39,6 +40,7 @@ const treatmentFormSchema = z.object({
   notes: optionalText,
 });
 
+type TreatmentFormInput = z.input<typeof treatmentFormSchema>;
 type TreatmentFormValues = z.infer<typeof treatmentFormSchema>;
 
 const defaultValues = {
@@ -55,11 +57,14 @@ export interface TreatmentFormProps {
 }
 
 export function TreatmentForm({ defaultValues: providedValues }: TreatmentFormProps) {
-  const form = useForm<TreatmentFormValues>({
-    defaultValues: {
-      ...defaultValues,
-      ...providedValues,
-    } as any,
+  const mergedDefaults: TreatmentFormInput = {
+    ...defaultValues,
+    ...providedValues,
+  } as TreatmentFormInput;
+
+  const form = useForm<TreatmentFormInput, object, TreatmentFormValues>({
+    resolver: zodResolver(treatmentFormSchema),
+    defaultValues: mergedDefaults,
     mode: "onSubmit",
   });
   const [message, setMessage] = useState<string | null>(null);

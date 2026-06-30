@@ -5,7 +5,6 @@ import {
   Activity,
   BellRing,
   FileText,
-  Stethoscope,
   Users,
 } from "lucide-react";
 
@@ -70,7 +69,13 @@ export default function PhysicianDashboardPage() {
         {workspace.metrics.map((metric, index) => {
           const Icon = metricIcons[index % metricIcons.length]!;
 
-          return <MetricCard key={metric.label} metric={metric} icon={Icon} />;
+          return (
+            <MetricCard
+              key={metric.label}
+              metric={metric}
+              icon={<Icon size={18} />}
+            />
+          );
         })}
       </section>
 

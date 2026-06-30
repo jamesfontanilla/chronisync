@@ -135,7 +135,7 @@ export default function PhysicianDocumentsPage() {
           ))
         ) : (
           <EmptyState
-            icon={FileText}
+            icon={<FileText size={24} />}
             title="No documents queued."
             description="Document uploads will appear here once the physician workspace has files to review."
           />

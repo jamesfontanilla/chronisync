@@ -2,7 +2,6 @@ import Link from "next/link";
 import {
   Activity,
   BellRing,
-  Database,
   ShieldCheck,
   Users,
 } from "lucide-react";

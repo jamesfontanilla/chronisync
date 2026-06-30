@@ -17,7 +17,7 @@ export default function PhysicianPatientsError({
   return (
     <main className="p-4 sm:p-6 lg:p-8">
       <EmptyState
-        icon={TriangleAlert}
+        icon={<TriangleAlert size={24} />}
         eyebrow="Workspace error"
         title="The patient panel could not load."
         description={error.message}

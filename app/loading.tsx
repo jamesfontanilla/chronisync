@@ -1,3 +1,5 @@
+ "use client";
+
 export default function Loading() {
   return (
     <main className="loading-shell" aria-busy="true" aria-live="polite">

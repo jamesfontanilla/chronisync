@@ -30,7 +30,7 @@ export default function TreatmentPlanPage() {
           </Card>
 
           <EmptyState
-            icon={ClipboardList}
+            icon={<ClipboardList size={24} />}
             eyebrow="Draft"
             title="No treatment draft is open."
             description="The saved draft and final plan will appear here once the patient has an active treatment plan."

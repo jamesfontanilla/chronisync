@@ -26,7 +26,7 @@ export default function AppointmentsPage() {
         </Card>
 
         <EmptyState
-          icon={CalendarDays}
+          icon={<CalendarDays size={24} />}
           eyebrow="Timeline"
           title="No appointments are scheduled yet."
           description="Appointment cards will appear here once this route is wired to the scheduling flow."

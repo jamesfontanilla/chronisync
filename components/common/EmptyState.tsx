@@ -1,10 +1,12 @@
+ "use client";
+
 import type { ReactNode } from "react";
-import { Sparkles, type LucideIcon } from "lucide-react";
+import { Sparkles } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
 export interface EmptyStateProps {
-  icon?: LucideIcon;
+  icon?: ReactNode;
   eyebrow?: ReactNode;
   title: ReactNode;
   description?: ReactNode;
@@ -14,7 +16,7 @@ export interface EmptyStateProps {
 }
 
 export function EmptyState({
-  icon: Icon = Sparkles,
+  icon = <Sparkles size={24} />,
   eyebrow,
   title,
   description,
@@ -25,7 +27,7 @@ export function EmptyState({
   return (
     <section className={cn("empty-state", className)}>
       <div className="empty-state__icon" aria-hidden="true">
-        <Icon size={24} />
+        {icon}
       </div>
 
       <div className="empty-state__content">

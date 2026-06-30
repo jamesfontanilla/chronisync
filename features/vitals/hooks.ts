@@ -3,12 +3,15 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 import {
   listVitalRecordsByPatient,
   listVitalRecordsByType,
 } from "./actions";
 import { vitalFormSchema, type VitalFormValues } from "./validation";
+
+type VitalFormInput = z.input<typeof vitalFormSchema>;
 
 const vitalDefaultValues = {
   patientId: "",
@@ -23,11 +26,14 @@ const vitalDefaultValues = {
 export function useVitalForm(
   defaultValues?: Partial<VitalFormValues>
 ) {
-  return useForm<VitalFormValues>({
-    defaultValues: {
-      ...vitalDefaultValues,
-      ...defaultValues,
-    } as any,
+  const mergedDefaults: VitalFormInput = {
+    ...vitalDefaultValues,
+    ...defaultValues,
+  } as VitalFormInput;
+
+  return useForm<VitalFormInput, object, VitalFormValues>({
+    resolver: zodResolver(vitalFormSchema),
+    defaultValues: mergedDefaults,
     mode: "onSubmit",
   });
 }

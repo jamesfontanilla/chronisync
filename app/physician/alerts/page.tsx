@@ -124,7 +124,7 @@ export default function PhysicianAlertsPage() {
           alerts.map((alert) => <AlertCard key={alert.id} alert={alert} />)
         ) : (
           <EmptyState
-            icon={TriangleAlert}
+            icon={<TriangleAlert size={24} />}
             title="No alerts available."
             description="The review queue will appear here when the physician workspace has open clinical signals."
           />

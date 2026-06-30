@@ -3,12 +3,15 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 import {
   listDocumentEntriesByPatient,
   listPendingDocumentEntriesByPatient,
 } from "./actions";
 import { documentFormSchema, type DocumentFormValues } from "./validation";
+
+type DocumentFormInput = z.input<typeof documentFormSchema>;
 
 const documentDefaultValues = {
   patientId: "",
@@ -26,11 +29,14 @@ const documentDefaultValues = {
 export function useDocumentForm(
   defaultValues?: Partial<DocumentFormValues>
 ) {
-  return useForm<DocumentFormValues>({
-    defaultValues: {
-      ...documentDefaultValues,
-      ...defaultValues,
-    } as any,
+  const mergedDefaults: DocumentFormInput = {
+    ...documentDefaultValues,
+    ...defaultValues,
+  } as DocumentFormInput;
+
+  return useForm<DocumentFormInput, object, DocumentFormValues>({
+    resolver: zodResolver(documentFormSchema),
+    defaultValues: mergedDefaults,
     mode: "onSubmit",
   });
 }

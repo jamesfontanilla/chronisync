@@ -29,7 +29,7 @@ export default function AllergiesPage() {
           </Card>
 
           <EmptyState
-            icon={ShieldCheck}
+            icon={<ShieldCheck size={24} />}
             eyebrow="Monitoring"
             title="No allergy alerts are open."
             description="Use this section to highlight active allergy risks for the care team."

@@ -20,7 +20,6 @@ import {
   documentExtractionResponseSchema,
   type DocumentExtractionDraft,
   type DocumentExtractionInput,
-  type DocumentExtractionResponse,
   DOCUMENT_EXTRACTION_RESPONSE_JSON_SCHEMA,
 } from "@/lib/ai/extract";
 import {
@@ -29,7 +28,6 @@ import {
   visitSummaryResponseSchema,
   type VisitSummaryDraft,
   type VisitSummaryInput,
-  type VisitSummaryResponse,
   VISIT_SUMMARY_RESPONSE_JSON_SCHEMA,
 } from "@/lib/ai/summarize";
 import { logger } from "@/lib/logger";

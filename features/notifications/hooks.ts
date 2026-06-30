@@ -7,14 +7,12 @@ import { humanize } from "@/lib/utils";
 
 import {
   buildNotificationViewModel,
-  listNotificationViewModelsByFilters,
   listNotificationsByFilters,
   listUnreadNotificationsByRecipient,
   summarizeNotifications,
   type NotificationFilters,
   type NotificationRecord,
   type NotificationStatus,
-  type NotificationSummary,
   type NotificationType,
   type NotificationViewModel,
 } from "./service";

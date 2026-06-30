@@ -1,3 +1,5 @@
+ "use client";
+
 export default function PhysicianPatientsLoading() {
   return (
     <main className="grid gap-6 p-4 sm:p-6 lg:p-8" aria-busy="true">

@@ -29,7 +29,7 @@ export default function DocumentsPage() {
           </Card>
 
           <EmptyState
-            icon={FileText}
+            icon={<FileText size={24} />}
             eyebrow="Archive"
             title="No document archive is open."
             description="Uploaded files will appear here once the patient has records to review."

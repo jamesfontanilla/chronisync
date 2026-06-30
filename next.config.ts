@@ -7,9 +7,7 @@ const nextConfig: NextConfig = {
 
   compress: true,
 
-  experimental: {
-    typedRoutes: true,
-  },
+  typedRoutes: true,
 
   images: {
     formats: ["image/avif", "image/webp"],

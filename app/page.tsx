@@ -1,3 +1,5 @@
+ "use client";
+
 import Link from "next/link";
 import {
   ArrowRight,
@@ -204,7 +206,7 @@ export default function HomePage() {
 
             <div className="home-main__preview" id="preview">
               <EmptyState
-                icon={ShieldCheck}
+                icon={<ShieldCheck size={24} />}
                 eyebrow="Workspace preview"
                 title="No clinical workspace is open yet."
                 description="Sign in or create an account to continue into the portal that matches your role. The glass shell stays light while the data loads behind it."

@@ -26,7 +26,7 @@ export default function DiseasesPage() {
         </Card>
 
         <EmptyState
-          icon={ShieldCheck}
+          icon={<ShieldCheck size={24} />}
           eyebrow="Condition list"
           title="No disease records are open."
           description="Disease entries will appear here once the patient has conditions on file."

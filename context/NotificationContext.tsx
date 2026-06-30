@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useMemo,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import {
@@ -18,6 +13,8 @@ import {
   type NotificationRecord,
 } from "@/features/notifications/service";
 import { useNotificationsQuery } from "@/features/notifications/hooks";
+
+const EMPTY_NOTIFICATIONS: NotificationRecord[] = [];
 
 export interface NotificationContextValue {
   recipientId: string | null;
@@ -54,16 +51,11 @@ export function NotificationContextProvider({
 }) {
   const queryClient = useQueryClient();
   const notificationsQuery = useNotificationsQuery(recipientId);
-  const notifications = notificationsQuery.data ?? [];
-
-  const unreadCount = useMemo(
-    () =>
-      notifications.reduce(
-        (count, notification) =>
-          notification.status === "unread" ? count + 1 : count,
-        0
-      ),
-    [notifications]
+  const notifications = notificationsQuery.data ?? EMPTY_NOTIFICATIONS;
+  const unreadCount = notifications.reduce(
+    (count, notification) =>
+      notification.status === "unread" ? count + 1 : count,
+    0
   );
 
   async function refresh(): Promise<void> {
@@ -109,36 +101,22 @@ export function NotificationContextProvider({
     await refresh();
   }
 
-  const value = useMemo<NotificationContextValue>(
-    () => ({
-      recipientId: recipientId ?? null,
-      notifications,
-      unreadCount,
-      isLoading: notificationsQuery.isLoading,
-      error:
-        notificationsQuery.error instanceof Error
-          ? notificationsQuery.error.message
-          : null,
-      refresh,
-      create,
-      markAsRead,
-      markAsUnread,
-      archive,
-      remove,
-    }),
-    [
-      archive,
-      create,
-      markAsRead,
-      markAsUnread,
-      notifications,
-      notificationsQuery.error,
-      notificationsQuery.isLoading,
-      recipientId,
-      refresh,
-      unreadCount,
-    ]
-  );
+  const value: NotificationContextValue = {
+    recipientId: recipientId ?? null,
+    notifications,
+    unreadCount,
+    isLoading: notificationsQuery.isLoading,
+    error:
+      notificationsQuery.error instanceof Error
+        ? notificationsQuery.error.message
+        : null,
+    refresh,
+    create,
+    markAsRead,
+    markAsUnread,
+    archive,
+    remove,
+  };
 
   return (
     <NotificationContext.Provider value={value}>

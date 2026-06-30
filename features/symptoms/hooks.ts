@@ -3,12 +3,15 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 import {
   listActiveSymptomRecordsByPatient,
   listSymptomRecordsByPatient,
 } from "./actions";
 import { symptomFormSchema, type SymptomFormValues } from "./validation";
+
+type SymptomFormInput = z.input<typeof symptomFormSchema>;
 
 const symptomDefaultValues = {
   patientId: "",
@@ -23,11 +26,14 @@ const symptomDefaultValues = {
 export function useSymptomForm(
   defaultValues?: Partial<SymptomFormValues>
 ) {
-  return useForm<SymptomFormValues>({
-    defaultValues: {
-      ...symptomDefaultValues,
-      ...defaultValues,
-    } as any,
+  const mergedDefaults: SymptomFormInput = {
+    ...symptomDefaultValues,
+    ...defaultValues,
+  } as SymptomFormInput;
+
+  return useForm<SymptomFormInput, object, SymptomFormValues>({
+    resolver: zodResolver(symptomFormSchema),
+    defaultValues: mergedDefaults,
     mode: "onSubmit",
   });
 }

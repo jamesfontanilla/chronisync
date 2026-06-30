@@ -29,7 +29,7 @@ export default function SymptomsPage() {
           </Card>
 
           <EmptyState
-            icon={Activity}
+            icon={<Activity size={24} />}
             eyebrow="Timeline"
             title="No symptom timeline is open."
             description="Symptom logs will appear here once entries are saved for the patient."
