@@ -1,39 +1,40 @@
 /**
  * =============================================================================
  * ChroniSync
- * Authentication Schemas
+ * Auth Schemas
  * =============================================================================
  */
 
 import { z } from "zod";
 
-/* -------------------------------------------------------------------------- */
-/*                                 Constants                                  */
-/* -------------------------------------------------------------------------- */
+import { AUTH_ROLE_VALUES } from "@/lib/auth/roles";
 
-const PASSWORD_REGEX =
-  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
-/* -------------------------------------------------------------------------- */
-/*                              Login Schema                                  */
-/* -------------------------------------------------------------------------- */
+export const authRoleSchema = z.enum(AUTH_ROLE_VALUES);
+
+export const authUserSchema = z.object({
+  uid: z.string().min(1, "User ID is required."),
+  email: z.string().email().nullable(),
+  displayName: z.string().nullable(),
+  photoURL: z.string().url().nullable(),
+  emailVerified: z.boolean(),
+});
+
+export type AuthUserData = z.infer<typeof authUserSchema>;
 
 export const loginSchema = z.object({
   email: z
-    .email("Please enter a valid email address.")
-    .trim()
-    .toLowerCase(),
-
-  password: z
     .string()
-    .min(1, "Password is required."),
+    .trim()
+    .min(1, "Email is required.")
+    .email("Please enter a valid email address.")
+    .toLowerCase(),
+  password: z.string().min(1, "Password is required."),
+  role: authRoleSchema,
 });
 
 export type LoginFormData = z.infer<typeof loginSchema>;
-
-/* -------------------------------------------------------------------------- */
-/*                            Register Schema                                 */
-/* -------------------------------------------------------------------------- */
 
 export const registerSchema = z
   .object({
@@ -42,12 +43,12 @@ export const registerSchema = z
       .trim()
       .min(2, "Full name must be at least 2 characters.")
       .max(100, "Full name is too long."),
-
     email: z
-      .email("Please enter a valid email address.")
+      .string()
       .trim()
+      .min(1, "Email is required.")
+      .email("Please enter a valid email address.")
       .toLowerCase(),
-
     password: z
       .string()
       .min(8, "Password must be at least 8 characters.")
@@ -55,41 +56,28 @@ export const registerSchema = z
         PASSWORD_REGEX,
         "Password must contain at least one uppercase letter, one lowercase letter, and one number."
       ),
-
-    confirmPassword: z.string(),
-
-    role: z.enum(["patient", "physician"]),
+    confirmPassword: z.string().min(1, "Please confirm your password."),
+    role: authRoleSchema,
   })
-  .refine(
-    (data) => data.password === data.confirmPassword,
-    {
-      path: ["confirmPassword"],
-      message: "Passwords do not match.",
-    }
-  );
+  .refine((values) => values.password === values.confirmPassword, {
+    path: ["confirmPassword"],
+    message: "Passwords do not match.",
+  });
 
-export type RegisterFormData = z.infer<
-  typeof registerSchema
->;
-
-/* -------------------------------------------------------------------------- */
-/*                         Forgot Password Schema                             */
-/* -------------------------------------------------------------------------- */
+export type RegisterFormData = z.infer<typeof registerSchema>;
 
 export const forgotPasswordSchema = z.object({
   email: z
-    .email("Please enter a valid email address.")
+    .string()
     .trim()
+    .min(1, "Email is required.")
+    .email("Please enter a valid email address.")
     .toLowerCase(),
 });
 
 export type ForgotPasswordFormData = z.infer<
   typeof forgotPasswordSchema
 >;
-
-/* -------------------------------------------------------------------------- */
-/*                         Reset Password Schema                              */
-/* -------------------------------------------------------------------------- */
 
 export const resetPasswordSchema = z
   .object({
@@ -100,17 +88,36 @@ export const resetPasswordSchema = z
         PASSWORD_REGEX,
         "Password must contain at least one uppercase letter, one lowercase letter, and one number."
       ),
-
-    confirmPassword: z.string(),
+    confirmPassword: z.string().min(1, "Please confirm your password."),
   })
-  .refine(
-    (data) => data.password === data.confirmPassword,
-    {
-      path: ["confirmPassword"],
-      message: "Passwords do not match.",
-    }
-  );
+  .refine((values) => values.password === values.confirmPassword, {
+    path: ["confirmPassword"],
+    message: "Passwords do not match.",
+  });
 
 export type ResetPasswordFormData = z.infer<
   typeof resetPasswordSchema
 >;
+
+export const authCallbackStatusSchema = z.enum([
+  "signed-in",
+  "registered",
+  "reset-sent",
+  "verification-sent",
+  "error",
+]);
+
+export const authCallbackSchema = z.object({
+  status: authCallbackStatusSchema.optional(),
+  role: authRoleSchema.optional(),
+  email: z
+    .string()
+    .trim()
+    .min(1)
+    .email("Please enter a valid email address.")
+    .optional(),
+  next: z.string().trim().optional(),
+  message: z.string().trim().optional(),
+});
+
+export type AuthCallbackData = z.infer<typeof authCallbackSchema>;
