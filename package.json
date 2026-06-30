@@ -1,5 +1,5 @@
 {
-  "name": "chronic-disease-management",
+  "name": "chronisync",
   "version": "0.1.0",
   "private": true,
   "description": "A two-sided chronic disease management platform for patients and physicians with explainable AI-assisted workflows.",
@@ -24,7 +24,7 @@
   ],
   "engines": {
     "node": ">=22.0.0",
-    "pnpm": ">=10.0.0"
+    "pnpm": ">=10.15.1"
   },
   "scripts": {
     "dev": "next dev --turbopack",
@@ -54,7 +54,6 @@
     "@radix-ui/react-scroll-area": "^1.2.10",
     "@radix-ui/react-select": "^2.2.6",
     "@radix-ui/react-separator": "^1.1.7",
-    "@radix-ui/react-sheet": "^1.0.0",
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-toast": "^1.2.15",
@@ -89,6 +88,5 @@
     "tailwindcss": "^4.1.12",
     "tsx": "^4.20.5",
     "typescript": "^5.9.2"
-  },
-  "packageManager": "pnpm@10"
+  }
 }
