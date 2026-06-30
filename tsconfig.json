@@ -40,7 +40,7 @@
       "@/schemas/*": ["./schemas/*"],
       "@/types/*": ["./types/*"],
       "@/context/*": ["./context/*"],
-      "@/firebase/*": ["./firebase/*"],
+      "@/firebase/*": ["./lib/firebase/*"],
       "@/functions/*": ["./functions/*"]
     },
 

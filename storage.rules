@@ -1,10 +1,41 @@
 rules_version = '2';
 
-// Craft rules based on data in your Firestore database
-// allow write: if firestore.get(
-//    /databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin;
 service firebase.storage {
   match /b/{bucket}/o {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn() && request.auth.token.role == "admin";
+    }
+
+    function isPhysician() {
+      return signedIn() &&
+        (request.auth.token.role == "physician" || isAdmin());
+    }
+
+    function ownsFolder(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function canAccessPatientFiles(patientId) {
+      return signedIn() &&
+        (request.auth.uid == patientId || isPhysician());
+    }
+
+    match /users/{userId}/profile/{allPaths=**} {
+      allow read, write: if ownsFolder(userId) || isAdmin();
+    }
+
+    match /patients/{patientId}/documents/{allPaths=**} {
+      allow read, write: if canAccessPatientFiles(patientId);
+    }
+
+    match /temp/{allPaths=**} {
+      allow read, write: if signedIn();
+    }
+
     match /{allPaths=**} {
       allow read, write: if false;
     }

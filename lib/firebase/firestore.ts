@@ -18,6 +18,7 @@ import {
   where,
   type CollectionReference,
   type DocumentData,
+  type DocumentReference,
   type QueryConstraint,
 } from "firebase/firestore";
 
@@ -137,10 +138,13 @@ export async function updateDocument<T extends DocumentData>(
   documentId: string,
   data: Partial<T>
 ): Promise<void> {
-  await updateDoc(
-    doc(db, collectionName, documentId),
-    data
-  );
+  const reference = doc(
+    db,
+    collectionName,
+    documentId
+  ) as DocumentReference<DocumentData>;
+
+  await updateDoc(reference, data as Partial<DocumentData>);
 }
 
 /* -------------------------------------------------------------------------- */

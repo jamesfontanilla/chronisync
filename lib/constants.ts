@@ -68,6 +68,7 @@ export const ALLOWED_FILE_TYPES = [
   "application/pdf",
   "image/jpeg",
   "image/png",
+  "image/webp",
 ] as const;
 
 export const MAX_DOCUMENT_SIZE = 10 * 1024 * 1024; // 10 MB

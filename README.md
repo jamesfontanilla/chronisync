@@ -276,6 +276,15 @@ NEXT_PUBLIC_FIREBASE_APP_ID=
 GEMINI_API_KEY=
 ```
 
+If you plan to run the server-side Firebase Admin SDK or the seed scripts, also set:
+
+```env
+FIREBASE_PROJECT_ID=
+FIREBASE_CLIENT_EMAIL=
+FIREBASE_PRIVATE_KEY=
+FIREBASE_STORAGE_BUCKET=
+```
+
 ---
 
 ## Run Development Server

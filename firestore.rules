@@ -1,18 +1,96 @@
-rules_version='2'
+rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn() && request.auth.token.role == "admin";
+    }
+
+    function isPhysician() {
+      return signedIn() &&
+        (request.auth.token.role == "physician" || isAdmin());
+    }
+
+    function ownsScopedRecord(data) {
+      return signedIn() && (
+        data.userId == request.auth.uid ||
+        data.patientId == request.auth.uid ||
+        data.physicianId == request.auth.uid ||
+        data.ownerId == request.auth.uid ||
+        data.recipientId == request.auth.uid ||
+        data.assignedTo == request.auth.uid
+      );
+    }
+
+    function isPatientScopedCollection(collection) {
+      return collection == "medications" ||
+        collection == "allergies" ||
+        collection == "vitals" ||
+        collection == "symptoms" ||
+        collection == "diseases" ||
+        collection == "documents" ||
+        collection == "treatmentPlans" ||
+        collection == "appointments" ||
+        collection == "alerts" ||
+        collection == "summaries" ||
+        collection == "notifications";
+    }
+
+    match /users/{userId} {
+      allow read, create, update: if signedIn() &&
+        (request.auth.uid == userId || isAdmin());
+      allow delete: if isAdmin();
+
+      match /{document=**} {
+        allow read, write: if signedIn() &&
+          (request.auth.uid == userId || isAdmin());
+      }
+    }
+
+    match /patients/{patientId} {
+      allow read, create, update: if signedIn() &&
+        (request.auth.uid == patientId || isPhysician());
+      allow delete: if isAdmin();
+
+      match /{document=**} {
+        allow read, write: if signedIn() &&
+          (request.auth.uid == patientId || isPhysician());
+      }
+    }
+
+    match /physicians/{physicianId} {
+      allow read, create, update: if signedIn() &&
+        (request.auth.uid == physicianId || isAdmin());
+      allow delete: if isAdmin();
+
+      match /{document=**} {
+        allow read, write: if signedIn() &&
+          (request.auth.uid == physicianId || isAdmin());
+      }
+    }
+
+    match /{collection}/{documentId} {
+      allow read: if isPatientScopedCollection(collection) &&
+        (isPhysician() || ownsScopedRecord(resource.data));
+
+      allow create: if isPatientScopedCollection(collection) &&
+        (isPhysician() || ownsScopedRecord(request.resource.data));
+
+      allow update: if isPatientScopedCollection(collection) &&
+        (isPhysician() ||
+          (ownsScopedRecord(resource.data) &&
+            ownsScopedRecord(request.resource.data)));
+
+      allow delete: if isPatientScopedCollection(collection) &&
+        (isPhysician() || ownsScopedRecord(resource.data));
+    }
+
     match /{document=**} {
-      // This rule allows anyone with your database reference to view, edit,
-      // and delete all data in your database. It is useful for getting
-      // started, but it is configured to expire after 30 days because it
-      // leaves your app open to attackers. At that time, all client
-      // requests to your database will be denied.
-      //
-      // Make sure to write security rules for your app before that time, or
-      // else all client requests to your database will be denied until you
-      // update your rules.
-      allow read, write: if request.time < timestamp.date(2026, 7, 30);
+      allow read, write: if false;
     }
   }
 }
