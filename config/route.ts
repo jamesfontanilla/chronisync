@@ -49,6 +49,8 @@ export const ROUTES = {
 
     TREATMENT_PLAN: "/patient/treatment-plan",
 
+    MORE: "/patient/more",
+
     SETTINGS: "/patient/settings",
   },
 

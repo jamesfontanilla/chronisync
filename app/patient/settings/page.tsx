@@ -1,7 +1,13 @@
+"use client";
+
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useTheme } from "next-themes";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { ROUTES } from "@/config/route";
 import {
   describeExportRetentionWindow,
   getCaregiverAccessTierLabel,
@@ -13,6 +19,15 @@ import {
 } from "@/lib/consent/scopes";
 
 export default function SettingsPage() {
+  const { resolvedTheme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isDark = mounted && resolvedTheme === "dark";
+
   return (
     <main className="grid gap-6 p-4 sm:p-6 lg:p-8">
       <PageHeader
@@ -29,8 +44,8 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent className="grid gap-3 text-sm leading-7 text-[color:var(--ui-muted)]">
             <p>Name, contact information, and account details belong here.</p>
-            <Button variant="secondary" className="w-fit">
-              Edit profile
+            <Button asChild variant="secondary" className="w-fit">
+              <Link href={ROUTES.PATIENT.MORE}>Edit profile</Link>
             </Button>
           </CardContent>
         </Card>
@@ -41,8 +56,8 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent className="grid gap-3 text-sm leading-7 text-[color:var(--ui-muted)]">
             <p>Medication reminders, follow-up alerts, and document updates can be tuned here.</p>
-            <Button variant="secondary" className="w-fit">
-              Manage alerts
+            <Button asChild variant="secondary" className="w-fit">
+              <Link href={ROUTES.PATIENT.DASHBOARD}>Manage alerts</Link>
             </Button>
           </CardContent>
         </Card>
@@ -53,8 +68,14 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent className="grid gap-3 text-sm leading-7 text-[color:var(--ui-muted)]">
             <p>Keep the interface easy to read, especially on smaller screens.</p>
-            <Button variant="secondary" className="w-fit">
-              Theme settings
+            <Button
+              type="button"
+              variant="secondary"
+              className="w-fit"
+              aria-pressed={isDark}
+              onClick={() => setTheme(isDark ? "light" : "dark")}
+            >
+              {isDark ? "Light theme" : "Dark theme"}
             </Button>
           </CardContent>
         </Card>
