@@ -31,6 +31,10 @@ import {
   VISIT_SUMMARY_RESPONSE_JSON_SCHEMA,
 } from "@/lib/ai/summarize";
 import { logger } from "@/lib/logger";
+import {
+  AI_DRAFT_DISCLAIMER,
+  compactAiMetadata,
+} from "@/lib/ai/metadata";
 
 import { z, type ZodTypeAny } from "zod";
 
@@ -137,20 +141,6 @@ async function generateStructuredJson<TSchema extends ZodTypeAny>(
   return parsed;
 }
 
-function buildMetadata(
-  values: Record<string, string | number | boolean | undefined>
-): Record<string, unknown> {
-  const metadata: Record<string, unknown> = {};
-
-  for (const [key, value] of Object.entries(values)) {
-    if (value !== undefined) {
-      metadata[key] = value;
-    }
-  }
-
-  return metadata;
-}
-
 function normalizeSourceText(
   sourceText: string,
   maxLength = 16_000
@@ -237,7 +227,8 @@ export async function extractClinicalDocument(
       : {}),
     ...(validatedInput.notes ? { notes: validatedInput.notes } : {}),
     sourceTextLength: validatedInput.sourceText.length,
-    metadata: buildMetadata({
+    metadata: compactAiMetadata({
+      aiDisclaimer: AI_DRAFT_DISCLAIMER,
       patientId: validatedInput.patientId,
       documentId: validatedInput.documentId,
       documentTitle: validatedInput.documentTitle,
@@ -248,6 +239,21 @@ export async function extractClinicalDocument(
       sourceUrl: validatedInput.sourceUrl,
       sourceTextLength: validatedInput.sourceText.length,
       confidence: response.confidence,
+      traceability: {
+        kind: "document_extraction",
+        sourceTextLength: validatedInput.sourceText.length,
+        confidence: response.confidence,
+        context: {
+          patientId: validatedInput.patientId,
+          documentId: validatedInput.documentId,
+          documentTitle: validatedInput.documentTitle,
+          fileName: validatedInput.fileName,
+          fileType: validatedInput.fileType,
+          categoryHint: validatedInput.categoryHint,
+          physicianName: validatedInput.physicianName,
+          sourceUrl: validatedInput.sourceUrl,
+        },
+      },
     }),
   });
 
@@ -336,7 +342,8 @@ export async function generateVisitSummary(
       : {}),
     model,
     sourceNotesLength: validatedInput.sourceNotes.length,
-    metadata: buildMetadata({
+    metadata: compactAiMetadata({
+      aiDisclaimer: AI_DRAFT_DISCLAIMER,
       patientId: validatedInput.patientId,
       physicianId: validatedInput.physicianId,
       encounterId: validatedInput.encounterId,
@@ -345,6 +352,26 @@ export async function generateVisitSummary(
       visitDate: validatedInput.visitDate,
       sourceNotesLength: validatedInput.sourceNotes.length,
       confidence: response.confidence,
+      traceability: {
+        kind: "visit_summary",
+        sourceNotesLength: validatedInput.sourceNotes.length,
+        sourceCounts: {
+          patientComplaints: validatedInput.patientComplaints.length,
+          physicianNotes: validatedInput.physicianNotes.length,
+          medicationChanges: validatedInput.medicationChanges.length,
+          followUpSchedule: validatedInput.followUpSchedule.length,
+          vitalHighlights: validatedInput.vitalHighlights.length,
+          documentHighlights: validatedInput.documentHighlights.length,
+        },
+        context: {
+          patientId: validatedInput.patientId,
+          physicianId: validatedInput.physicianId,
+          encounterId: validatedInput.encounterId,
+          patientName: validatedInput.patientName,
+          physicianName: validatedInput.physicianName,
+          visitDate: validatedInput.visitDate,
+        },
+      },
     }),
   });
 

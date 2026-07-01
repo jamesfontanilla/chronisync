@@ -15,7 +15,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { buildFoodPhotoViewModel } from "@/features/food-photo/service";
 import type { FoodPhotoRecord } from "@/features/food-photo/types";
-import { formatDateTime } from "@/lib/utils";
+import { formatDateTime, humanize } from "@/lib/utils";
 
 export interface PhotoPreviewProps {
   record: FoodPhotoRecord;
@@ -152,7 +152,7 @@ export function PhotoPreview({
               {viewModel.preview}
             </div>
             <div className="mt-1 text-sm text-[color:var(--ui-muted)]">
-              {record.source}
+              {record.source === "ai" ? "AI" : humanize(record.source)}
             </div>
           </div>
           <div className="rounded-2xl border border-[color:var(--ui-border)] bg-[color:var(--ui-surface-strong)] p-4">

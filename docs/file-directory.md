@@ -11,6 +11,12 @@ This document does two jobs:
 - The current repo already covers the strongest web-app pieces: authentication, patient and physician portals, an admin area, Firebase plumbing, rules, AI summaries, alerting, docs, seeds, and tests.
 - The biggest gaps versus the spec are the mobile-first diary loop, quick-add flows, food-photo capture, caregiver and on-behalf-of flows, offline sync, device/CGM sync, export-heavy reporting, and the more explicit consent/provenance surfaces.
 
+## Build vs Demo Legend
+
+- `build` means the file or flow is expected to behave like real product code and should survive deployment.
+- `demo` means the file can be seeded, scripted, or otherwise illustrative, but it must say so clearly in docs and UI.
+- `hybrid` means the screen is real code with seeded data or partial backend wiring until the live integration lands.
+
 ## Phase 0 - Product brief and docs
 
 ```text
@@ -31,7 +37,7 @@ chronisync/
     `-- user-journeys.md
 ```
 
-This phase captures the source brief, supporting analysis, and the written product references that define scope before code generation starts.
+This phase captures the source brief, supporting analysis, and the written product references that define scope before code generation starts. Treat it as `build` for the spec, and `demo` only for screenshots or presentation assets.
 
 ## Phase 1 - Foundation and app shell
 
@@ -72,7 +78,7 @@ chronisync/
 |   `-- ThemeProvider.tsx
 ```
 
-This phase establishes the repo skeleton, global routing, and the base Next.js shell.
+This phase establishes the repo skeleton, global routing, and the base Next.js shell. It is `build` work, not demo scaffolding.
 
 ## Phase 2 - Authentication and access control
 
@@ -109,7 +115,7 @@ chronisync/
 |           `-- page.tsx
 ```
 
-This phase adds role-aware access control, auth state, and the public auth screens.
+This phase adds role-aware access control, auth state, and the public auth screens. The screens are `build`, while the callback flow can still be emulator-friendly in local/demo environments.
 
 ## Phase 3 - Shared UI and presentation layer
 
@@ -167,7 +173,7 @@ chronisync/
 |   `-- useDashboard.ts
 ```
 
-This phase provides the shared visual system, dashboard cards, charts, forms, and the summary dashboard slice.
+This phase provides the shared visual system, dashboard cards, charts, forms, and the summary dashboard slice. The visual shell is `build`; seeded values are acceptable where live queries are not connected yet.
 
 ## Phase 4 - Core data contracts and Firebase plumbing
 
@@ -205,7 +211,7 @@ chronisync/
 |   `-- vital.ts
 ```
 
-This phase defines the shared data shapes and the Firebase client, admin, auth, Firestore, and storage adapters.
+This phase defines the shared data shapes and the Firebase client, admin, auth, Firestore, and storage adapters. This is core `build` infrastructure.
 
 ## Phase 5 - Clinical services, rules, and alert slices
 
@@ -273,7 +279,7 @@ chronisync/
 |       `-- validation.ts
 ```
 
-This phase captures the clinical logic for medication, allergy, symptom, vital, document, and alert workflows, plus the first rules engine.
+This phase captures the clinical logic for medication, allergy, symptom, vital, document, and alert workflows, plus the first rules engine. The rules should be `build` logic even when backed by seeded test data.
 
 ## Phase 6 - AI pipeline
 
@@ -297,7 +303,7 @@ chronisync/
 |       `-- SummaryPreview.tsx
 ```
 
-This phase holds the AI extraction and summarization layer that the patient and physician flows consume.
+This phase holds the AI extraction and summarization layer that the patient and physician flows consume. The prompts and metadata should be `build`; the generated examples in docs remain `demo`.
 
 ## Phase 7 - Patient portal and self-management
 
@@ -349,7 +355,7 @@ chronisync/
 |   `-- useVitals.ts
 ```
 
-This phase is the patient-facing workspace with its existing route-level loading and error states, plus the patient-oriented hooks.
+This phase is the patient-facing workspace with its existing route-level loading and error states, plus the patient-oriented hooks. Pages can be `hybrid` if they still lean on seeded snapshots during development.
 
 ## Phase 8 - Physician portal and review workflow
 
@@ -383,7 +389,7 @@ chronisync/
 |       `-- validation.ts
 ```
 
-This phase exposes the physician watchlist, alerts, summaries, documents, and treatment review surfaces. It reuses the shared dashboard and AI presentation components from earlier phases.
+This phase exposes the physician watchlist, alerts, summaries, documents, and treatment review surfaces. It reuses the shared dashboard and AI presentation components from earlier phases and should read as `build`, even if the data source is seeded in demo mode.
 
 ## Phase 9 - Admin, context, notifications, and API surface
 
@@ -421,7 +427,7 @@ chronisync/
 |       `-- types.ts
 ```
 
-This phase owns the admin console, app-wide contexts, notifications, and the API routes that glue the product together.
+This phase owns the admin console, app-wide contexts, notifications, and the API routes that glue the product together. Treat the routes as `build`; any mock responses must be clearly labeled as fallback behavior.
 
 ## Phase 10 - Scripts, docs, tests, and verification
 
@@ -448,7 +454,7 @@ chronisync/
 |-- playwright.config.ts
 ```
 
-This phase covers the repeatable safety net: seed data, unit tests, integration tests, real-browser E2E, and the Playwright config. The longer prose docs live in Phase 0.
+This phase covers the repeatable safety net: seed data, unit tests, integration tests, real-browser E2E, and the Playwright config. The longer prose docs live in Phase 0. This is where the `demo` path is validated against the `build` path.
 
 ## Phase 11 - Mobile diary and quick capture
 
@@ -486,7 +492,7 @@ chronisync/
 |       `-- validation.ts
 ```
 
-This phase follows the overview's bottom-tab navigation and daily logging loop, including the Add action, diary view, partners view, and photo-based meal entry.
+This phase follows the overview's bottom-tab navigation and daily logging loop, including the Add action, diary view, partners view, and photo-based meal entry. It is `hybrid`: the shell is real, but seeded data and fallback forms are expected during development.
 
 ## Phase 12 - Offline-first Web Sync
 
@@ -512,7 +518,7 @@ chronisync/
 |       `-- validation.ts
 ```
 
-This phase covers browser-local queueing, reconnect-driven flushes, optimistic updates, and web-friendly device sync adapters. In the web app, "device-sync" means imported data, vendor-backed sync, or browser APIs where supported, not always-on native device access.
+This phase covers browser-local queueing, reconnect-driven flushes, optimistic updates, and web-friendly device sync adapters. In the web app, "device-sync" means imported data, vendor-backed sync, or browser APIs where supported, not always-on native device access. This is `build` work with `demo`-safe fallbacks.
 
 ## Phase 13 - Caregiver, consent, export, and compliance
 
@@ -544,7 +550,7 @@ chronisync/
 |       `-- provenance.ts
 ```
 
-This phase covers caregiver roles, explicit consent scopes, report exports, and the provenance layer that keeps AI outputs auditable.
+This phase covers caregiver roles, explicit consent scopes, report exports, and the provenance layer that keeps AI outputs auditable. These pieces should be `build`-grade because they encode product policy, not just demo copy.
 
 ## Phase 14 - Future mobile support helpers
 

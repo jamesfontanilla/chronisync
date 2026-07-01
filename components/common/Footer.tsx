@@ -128,7 +128,7 @@ export function Footer({
         }
 
         .footer__link {
-          padding: 0.55rem 0.85rem;
+          padding: 0.7rem 1rem;
           border-radius: 999px;
           border: 1px solid var(--ui-border);
           color: var(--ui-accent);

@@ -151,14 +151,22 @@ export function ConfirmMealSheet({
             <div className="grid gap-1">
               <SheetTitle>Confirm meal</SheetTitle>
               <SheetDescription>
-                Review the captured meal, make small edits, and confirm the
-                entry for the patient timeline.
+                {record.source === "manual"
+                  ? "This meal was entered manually because the photo path was unclear. Review the text details before saving it."
+                  : "Review the captured meal, make small edits, and confirm the entry for the patient timeline."}
               </SheetDescription>
             </div>
           </div>
         </SheetHeader>
 
         <div className="grid gap-5">
+          {record.source === "manual" ? (
+            <div className="rounded-[1.5rem] border border-[color:var(--ui-border)] bg-[color:var(--ui-surface-strong)] px-4 py-3 text-sm leading-6 text-[color:var(--ui-muted)]">
+              No photo was captured for this record. The text fields below are
+              the source of truth for the draft.
+            </div>
+          ) : null}
+
           <PhotoPreview record={previewRecord} />
 
           <Separator />

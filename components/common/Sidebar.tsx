@@ -210,7 +210,7 @@ export function Sidebar({
           grid-template-columns: auto minmax(0, 1fr) auto;
           gap: 0.85rem;
           align-items: start;
-          padding: 0.85rem;
+          padding: 0.95rem 1rem;
           border-radius: var(--ui-radius-md);
           border: 1px solid var(--ui-border);
           background: rgba(255, 255, 255, 0.08);
@@ -243,13 +243,14 @@ export function Sidebar({
         }
 
         .sidebar__copy strong {
-          font-size: 0.98rem;
+          font-size: 1rem;
           line-height: 1.3;
         }
 
         .sidebar__copy small {
           color: var(--ui-muted);
-          line-height: 1.55;
+          line-height: 1.65;
+          font-size: 0.92rem;
         }
 
         .sidebar__chevron {
@@ -262,6 +263,7 @@ export function Sidebar({
           border-top: 1px solid var(--ui-border);
           color: var(--ui-muted);
           line-height: 1.7;
+          font-size: 0.95rem;
         }
 
         .sidebar__footer a {

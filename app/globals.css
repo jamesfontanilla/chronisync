@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 :root {
   color-scheme: light;
   --ui-bg: #f7f2ea;
@@ -47,6 +49,7 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
+  min-height: 100dvh;
   overflow-x: hidden;
   color: var(--ui-text);
   font-family: var(--font-body);
@@ -96,5 +99,42 @@ select {
 .app-shell {
   position: relative;
   min-height: 100vh;
+  min-height: 100dvh;
   isolation: isolate;
+}
+
+.auth-shell {
+  --auth-shell-columns: minmax(0, 1.05fr) minmax(420px, 0.95fr);
+  --auth-shell-gap: clamp(0.75rem, 2vw, 1.5rem);
+  --auth-hero-padding: clamp(2rem, 5vw, 4rem);
+  --auth-form-padding: clamp(1.25rem, 4vw, 3rem);
+  --auth-metrics-display: grid;
+}
+
+.auth-actions {
+  min-width: 0;
+}
+
+@media (max-width: 960px) {
+  .auth-shell {
+    --auth-shell-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .auth-shell {
+    --auth-hero-padding: 1rem 1rem 0.5rem;
+    --auth-form-padding: 0 1rem 1rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .auth-shell {
+    --auth-metrics-display: none;
+  }
+
+  .auth-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }

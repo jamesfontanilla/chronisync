@@ -18,6 +18,9 @@ import {
   humanize,
 } from "@/lib/utils";
 import {
+  buildCaregiverAccessPolicy,
+  getCaregiverAccessTierDescription,
+  getCaregiverAccessTierLabel,
   getPrivacyScopeLabel,
   normalizePrivacyScopes,
 } from "@/lib/privacy/policy";
@@ -80,6 +83,8 @@ function matchesQuery(caregiver: CaregiverRecord, query: string): boolean {
     caregiver.phoneNumber,
     caregiver.relationship,
     caregiver.notes,
+    caregiver.accessTier,
+    getCaregiverAccessTierLabel(caregiver.accessTier),
     ...(caregiver.permissions.map(getPrivacyScopeLabel) as string[]),
   ]
     .filter((value): value is string => Boolean(value))
@@ -123,11 +128,13 @@ export function buildCaregiverRecord(
 ): CaregiverRecord {
   const timestamp = createTimestamp();
   const permissions = normalizePrivacyScopes(data.permissions);
+  const accessTier = buildCaregiverAccessPolicy(permissions).tier;
 
   return {
     ...data,
     id: createRecordId(),
     permissions,
+    accessTier,
     status: data.status ?? "invited",
     isPrimary: data.isPrimary ?? false,
     ...(data.status === "active" ? { acceptedAt: timestamp } : {}),
@@ -166,10 +173,16 @@ export function buildCaregiverViewModel(
     caregiver.permissions
       .map(getPrivacyScopeLabel)
       .join(", ") || "No permissions";
+  const accessTierLabel = getCaregiverAccessTierLabel(caregiver.accessTier);
+  const accessTierDescription = getCaregiverAccessTierDescription(
+    caregiver.accessTier
+  );
 
   return {
     caregiver,
     relationshipLabel: humanize(caregiver.relationship),
+    accessTierLabel,
+    accessTierDescription,
     statusLabel: humanize(caregiver.status),
     permissionLabel,
     timeLabel: formatDateTime(caregiver.createdAt),
@@ -325,6 +338,11 @@ export async function updateCaregiver(
     ...(updates.permissions
       ? { permissions: normalizePrivacyScopes(updates.permissions) }
       : {}),
+    accessTier: buildCaregiverAccessPolicy(
+      updates.permissions
+        ? normalizePrivacyScopes(updates.permissions)
+        : current.permissions
+    ).tier,
     updatedAt: createTimestamp(),
   };
 

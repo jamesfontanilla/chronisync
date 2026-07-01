@@ -7,6 +7,10 @@
 
 import { z } from "zod";
 
+export const DEFAULT_EXPORT_RETENTION_DAYS = 30;
+export const DEFAULT_CONSENT_AUDIT_RETENTION_DAYS = 365;
+export const DEFAULT_PROVENANCE_RETENTION_DAYS = 365;
+
 export const PRIVACY_SCOPE_VALUES = [
   "view_profile",
   "view_medications",
@@ -26,6 +30,8 @@ export const privacyScopeSchema = z.enum(PRIVACY_SCOPE_VALUES);
 
 export type PrivacyScope = z.infer<typeof privacyScopeSchema>;
 
+export type CaregiverAccessTier = "read_only" | "log_on_behalf_of";
+
 export interface PrivacyPolicyEntry {
   scope: PrivacyScope;
   label: string;
@@ -33,6 +39,14 @@ export interface PrivacyPolicyEntry {
   allowsCaregiverAccess: boolean;
   allowsExport: boolean;
   allowsAiProcessing: boolean;
+  retentionLabel: string;
+}
+
+export interface CaregiverAccessPolicy {
+  tier: CaregiverAccessTier;
+  label: string;
+  description: string;
+  scopes: readonly PrivacyScope[];
 }
 
 export const PRIVACY_SCOPE_LABELS: Record<PrivacyScope, string> = {
@@ -107,6 +121,12 @@ export const AI_PROCESSABLE_SCOPES: readonly PrivacyScope[] = [
   "export_records",
 ] as const;
 
+function addDays(base: Date, days: number): Date {
+  const next = new Date(base);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+
 export function listPrivacyScopes(): PrivacyScope[] {
   return [...PRIVACY_SCOPE_VALUES];
 }
@@ -141,6 +161,23 @@ export function canAiProcessScope(scope: PrivacyScope): boolean {
   return AI_PROCESSABLE_SCOPES.includes(scope);
 }
 
+export function getPrivacyScopeRetentionLabel(
+  scope: PrivacyScope
+): string {
+  switch (scope) {
+    case "export_records":
+      return `${DEFAULT_EXPORT_RETENTION_DAYS}-day retention`;
+    case "caregiver_support":
+      return "Active while the caregiver invite remains in force";
+    case "emergency_access":
+      return "Break-glass session only";
+    case "ai_assistance":
+      return "Kept with the source record";
+    default:
+      return "Kept with the patient record";
+  }
+}
+
 export function buildPrivacyPolicy(
   scope: PrivacyScope
 ): PrivacyPolicyEntry {
@@ -151,9 +188,71 @@ export function buildPrivacyPolicy(
     allowsCaregiverAccess: canCaregiverAccessScope(scope),
     allowsExport: canExportScope(scope),
     allowsAiProcessing: canAiProcessScope(scope),
+    retentionLabel: getPrivacyScopeRetentionLabel(scope),
   };
 }
 
 export function listPrivacyPolicy(): PrivacyPolicyEntry[] {
   return listPrivacyScopes().map(buildPrivacyPolicy);
+}
+
+export function getCaregiverAccessTier(
+  scopes: readonly PrivacyScope[]
+): CaregiverAccessTier {
+  return scopes.includes("caregiver_support")
+    ? "log_on_behalf_of"
+    : "read_only";
+}
+
+export function getCaregiverAccessTierLabel(
+  tier: CaregiverAccessTier
+): string {
+  return tier === "log_on_behalf_of"
+    ? "Log on behalf of"
+    : "Read only";
+}
+
+export function getCaregiverAccessTierDescription(
+  tier: CaregiverAccessTier
+): string {
+  return tier === "log_on_behalf_of"
+    ? "Can create entries on the patient's behalf when the patient has explicitly invited support."
+    : "Can review the shared record without changing it.";
+}
+
+export function buildCaregiverAccessPolicy(
+  scopes: readonly PrivacyScope[]
+): CaregiverAccessPolicy {
+  const normalized = normalizePrivacyScopes(scopes);
+  const tier = getCaregiverAccessTier(normalized);
+
+  return {
+    tier,
+    label: getCaregiverAccessTierLabel(tier),
+    description: getCaregiverAccessTierDescription(tier),
+    scopes: normalized,
+  };
+}
+
+export function describeExportRetentionWindow(
+  days: number = DEFAULT_EXPORT_RETENTION_DAYS
+): string {
+  return `${days}-day retention`;
+}
+
+export function getDefaultExportExpirationDate(
+  createdAt: Date = new Date(),
+  days: number = DEFAULT_EXPORT_RETENTION_DAYS
+): Date {
+  return addDays(createdAt, days);
+}
+
+export function describeConsentAuditRetention(): string {
+  return `${DEFAULT_CONSENT_AUDIT_RETENTION_DAYS}-day audit retention`;
+}
+
+export function describeProvenanceRetentionWindow(
+  days: number = DEFAULT_PROVENANCE_RETENTION_DAYS
+): string {
+  return `${days}-day audit retention`;
 }

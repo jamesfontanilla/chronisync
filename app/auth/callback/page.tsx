@@ -233,6 +233,7 @@ export default function AuthCallbackPage() {
       </header>
 
       <div
+        className="auth-actions"
         style={{
           display: "flex",
           flexWrap: "wrap",

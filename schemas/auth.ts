@@ -13,12 +13,40 @@ const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
 export const authRoleSchema = z.enum(AUTH_ROLE_VALUES);
 
+export const interoperabilityStandardSchema = z.enum([
+  "fhir",
+  "openmrs",
+]);
+
+export const interoperabilityMappingStatusSchema = z.enum([
+  "unmapped",
+  "partial",
+  "mapped",
+]);
+
+export const interoperabilityReferenceSchema = z.object({
+  standard: interoperabilityStandardSchema,
+  resourceType: z.string().trim().min(1, "Resource type is required."),
+  resourceId: z.string().trim().min(1, "Resource ID is required."),
+  identifier: z.string().trim().optional(),
+  url: z.string().url().optional(),
+});
+
+export const interoperabilityProfileSchema = z.object({
+  mappingStatus: interoperabilityMappingStatusSchema.default("mapped"),
+  primaryStandard: interoperabilityStandardSchema.optional(),
+  references: z.array(interoperabilityReferenceSchema).default([]),
+  externalIds: z.record(z.string(), z.string()).default({}),
+  lastMappedAt: z.coerce.date().optional(),
+});
+
 export const authUserSchema = z.object({
   uid: z.string().min(1, "User ID is required."),
   email: z.string().email().nullable(),
   displayName: z.string().nullable(),
   photoURL: z.string().url().nullable(),
   emailVerified: z.boolean(),
+  interop: interoperabilityProfileSchema.optional(),
 });
 
 export type AuthUserData = z.infer<typeof authUserSchema>;

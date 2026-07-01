@@ -15,6 +15,9 @@ import {
 } from "@/lib/firebase/firestore";
 import { formatDateTime, humanize } from "@/lib/utils";
 import {
+  DEFAULT_EXPORT_RETENTION_DAYS,
+  describeExportRetentionWindow,
+  getDefaultExportExpirationDate,
   normalizePrivacyScopes,
 } from "@/lib/privacy/policy";
 import {
@@ -119,6 +122,173 @@ function sanitizeFileName(value: string): string {
 
 function getExportFormatLabel(format: ExportFormat): string {
   return humanize(format);
+}
+
+export type ExportInteroperabilityStandard = "fhir" | "openmrs";
+
+export interface ExportInteroperabilityMapping {
+  standard: ExportInteroperabilityStandard;
+  section: ExportSection;
+  resourceType: string;
+  notes: string;
+}
+
+export interface ExportInteroperabilityProfile {
+  standards: ExportInteroperabilityStandard[];
+  mappings: ExportInteroperabilityMapping[];
+  summary: string;
+}
+
+const EXPORT_INTEROPERABILITY_RESOURCE_MAP: Record<
+  ExportSection,
+  {
+    fhir: string;
+    openmrs: string;
+    notes: string;
+  }
+> = {
+  full_record: {
+    fhir: "Bundle",
+    openmrs: "export-bundle",
+    notes: "Full chart export across all supported sections.",
+  },
+  profile: {
+    fhir: "Patient",
+    openmrs: "person",
+    notes: "Demographic and identity data for the patient record.",
+  },
+  caregivers: {
+    fhir: "RelatedPerson",
+    openmrs: "person-relationship",
+    notes: "Patient-linked support people and their access tiers.",
+  },
+  consents: {
+    fhir: "Consent",
+    openmrs: "consent-resource",
+    notes: "Purpose-specific consent and revocation history.",
+  },
+  medications: {
+    fhir: "MedicationStatement",
+    openmrs: "drug-order",
+    notes: "Medication history and adherence events.",
+  },
+  vitals: {
+    fhir: "Observation",
+    openmrs: "obs",
+    notes: "Blood pressure, glucose, weight, and other vital trends.",
+  },
+  symptoms: {
+    fhir: "Observation",
+    openmrs: "obs",
+    notes: "Symptom logs and subjective check-ins.",
+  },
+  diseases: {
+    fhir: "Condition",
+    openmrs: "problem-list-item",
+    notes: "Problem list, diagnosis, and disease staging data.",
+  },
+  documents: {
+    fhir: "DocumentReference",
+    openmrs: "document",
+    notes: "Uploaded documents and reviewed attachments.",
+  },
+  summaries: {
+    fhir: "Composition",
+    openmrs: "clinical-note",
+    notes: "Patient and physician summary views.",
+  },
+  alerts: {
+    fhir: "RiskAssessment",
+    openmrs: "alert",
+    notes: "Guideline and threshold alerts for care teams.",
+  },
+  appointments: {
+    fhir: "Appointment",
+    openmrs: "visit",
+    notes: "Upcoming visit and scheduling context.",
+  },
+  treatment_plan: {
+    fhir: "CarePlan",
+    openmrs: "care-plan",
+    notes: "Active treatment and follow-up plan bundle.",
+  },
+  ai_outputs: {
+    fhir: "DiagnosticReport",
+    openmrs: "ai-summary",
+    notes: "AI extractions and consultation summaries.",
+  },
+  provenance: {
+    fhir: "Provenance",
+    openmrs: "audit-trail",
+    notes: "Source traceability and record lineage.",
+  },
+  audit_trail: {
+    fhir: "AuditEvent",
+    openmrs: "audit-trail",
+    notes: "Action history and administrative review records.",
+  },
+};
+
+export function buildExportInteroperabilityProfile(
+  sections: ExportSection[]
+): ExportInteroperabilityProfile {
+  const resolvedSections = resolveExportSections(sections);
+  const mappings = resolvedSections.flatMap((section) => {
+    const resource = EXPORT_INTEROPERABILITY_RESOURCE_MAP[section];
+
+    return [
+      {
+        standard: "fhir" as const,
+        section,
+        resourceType: resource.fhir,
+        notes: resource.notes,
+      },
+      {
+        standard: "openmrs" as const,
+        section,
+        resourceType: resource.openmrs,
+        notes: resource.notes,
+      },
+    ];
+  });
+
+  return {
+    standards: ["fhir", "openmrs"],
+    mappings,
+    summary: `${resolvedSections.length} export sections mapped across FHIR and OpenMRS`,
+  };
+}
+
+interface ExportLifecycleInput {
+  patientId: string;
+  requestedBy: string;
+  format: ExportFormat;
+  sections: ExportSection[];
+  status: ExportStatus;
+  deliveryMethod: ExportDeliveryMethod;
+  fileName: string;
+  expiresAt: Date | undefined;
+}
+
+function buildExportLifecycleMetadata(
+  exportRecord: ExportLifecycleInput,
+  metadata?: Record<string, unknown>
+): Record<string, unknown> {
+  return {
+    ...(metadata ?? {}),
+    lifecycle: {
+      retentionDays: DEFAULT_EXPORT_RETENTION_DAYS,
+      retentionLabel: describeExportRetentionWindow(),
+      expiresAt: exportRecord.expiresAt?.toISOString(),
+      format: exportRecord.format,
+      status: exportRecord.status,
+      deliveryMethod: exportRecord.deliveryMethod,
+      sections: exportRecord.sections,
+    },
+    interoperability: buildExportInteroperabilityProfile(
+      exportRecord.sections
+    ),
+  };
 }
 
 export function getExportSectionLabel(
@@ -254,6 +424,8 @@ export function buildExportRecord(
     (status === "ready" ? timestamp : undefined);
   const failedAt =
     data.failedAt ?? (status === "failed" ? timestamp : undefined);
+  const expiresAt =
+    data.expiresAt ?? getDefaultExportExpirationDate(timestamp);
 
   const record: ExportRecord = {
     id: createRecordId(),
@@ -273,8 +445,20 @@ export function buildExportRecord(
     ...(generatedAt ? { generatedAt } : {}),
     ...(completedAt ? { completedAt } : {}),
     ...(failedAt ? { failedAt } : {}),
-    ...(data.expiresAt ? { expiresAt: data.expiresAt } : {}),
-    ...(data.metadata ? { metadata: data.metadata } : {}),
+    expiresAt,
+    metadata: buildExportLifecycleMetadata(
+      {
+        patientId: data.patientId.trim(),
+        requestedBy: data.requestedBy.trim(),
+        format: data.format,
+        sections,
+        status,
+        deliveryMethod,
+        fileName,
+        expiresAt,
+      },
+      data.metadata
+    ),
     createdAt: timestamp,
     updatedAt: timestamp,
   };
@@ -584,6 +768,25 @@ export async function updateExport(
     ...(updates.consentScopes
       ? { consentScopes: normalizePrivacyScopes(updates.consentScopes) }
       : {}),
+    ...(updates.expiresAt ? { expiresAt: updates.expiresAt } : {}),
+    metadata: buildExportLifecycleMetadata(
+      {
+        patientId: current.patientId,
+        requestedBy: current.requestedBy,
+        format: updates.format ?? current.format,
+        sections: updates.sections
+          ? resolveExportSections(updates.sections)
+          : current.sections,
+        status: updates.status ?? current.status,
+        deliveryMethod: updates.deliveryMethod ?? current.deliveryMethod,
+        fileName: updates.fileName ?? current.fileName,
+        expiresAt: updates.expiresAt ?? current.expiresAt,
+      },
+      {
+        ...(current.metadata ?? {}),
+        ...(updates.metadata ?? {}),
+      }
+    ),
     updatedAt: createTimestamp(),
   };
 

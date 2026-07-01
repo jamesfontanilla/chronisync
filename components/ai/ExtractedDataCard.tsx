@@ -11,6 +11,12 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { ConfidenceBadge } from "./ConfidenceBadge";
 import { formatAiConfidence } from "@/features/ai/validation";
+import {
+  AI_DRAFT_DISCLAIMER,
+  getAiMetadataRecord,
+  getAiMetadataNumber,
+  getAiMetadataString,
+} from "@/lib/ai/metadata";
 import { humanize } from "@/lib/utils";
 import type { DocumentExtractionDraft } from "@/lib/ai/extract";
 
@@ -33,6 +39,17 @@ export function ExtractedDataCard({
   actions,
   className,
 }: ExtractedDataCardProps) {
+  const aiDisclaimer =
+    getAiMetadataString(draft.metadata, "aiDisclaimer") ?? AI_DRAFT_DISCLAIMER;
+  const traceability = getAiMetadataRecord(draft.metadata, "traceability");
+  const context = traceability
+    ? getAiMetadataRecord(traceability, "context")
+    : undefined;
+  const patientId = getAiMetadataString(context, "patientId");
+  const physicianName = getAiMetadataString(context, "physicianName");
+  const sourceUrl = getAiMetadataString(context, "sourceUrl");
+  const sourceTextLength = getAiMetadataNumber(traceability, "sourceTextLength");
+
   return (
     <Card className={className}>
       <CardHeader className="gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -58,6 +75,48 @@ export function ExtractedDataCard({
         <p className="m-0 whitespace-pre-line text-sm leading-7 text-[color:var(--ui-text)]">
           {draft.summary}
         </p>
+
+        <div className="grid gap-4 rounded-[1.5rem] border border-[color:var(--ui-border)] bg-[linear-gradient(135deg,rgba(25,163,154,0.08),rgba(11,101,116,0.03))] p-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="glass">AI extraction draft</Badge>
+            <Badge variant={draft.needsReview ? "destructive" : "secondary"}>
+              {draft.needsReview ? "Review required" : "Ready for review"}
+            </Badge>
+          </div>
+          <p className="m-0 text-sm leading-7 text-[color:var(--ui-muted)]">
+            {aiDisclaimer}
+          </p>
+
+          {traceability ? (
+            <div className="grid gap-3">
+              <div className="text-xs uppercase tracking-[0.2em] text-[color:var(--ui-muted)]">
+                Source map
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {draft.documentId ? (
+                  <Badge variant="outline">{draft.documentId}</Badge>
+                ) : null}
+                {draft.fileName ? (
+                  <Badge variant="secondary">{draft.fileName}</Badge>
+                ) : null}
+                {draft.fileType ? (
+                  <Badge variant="glass">{draft.fileType}</Badge>
+                ) : null}
+                {draft.categoryHint ? (
+                  <Badge variant="outline">{humanize(draft.categoryHint)}</Badge>
+                ) : null}
+                <Badge variant="secondary">
+                  {sourceTextLength ?? draft.sourceTextLength} source characters
+                </Badge>
+              </div>
+              <div className="flex flex-wrap gap-2 text-sm text-[color:var(--ui-muted)]">
+                {patientId ? <span>Patient: {patientId}</span> : null}
+                {physicianName ? <span>Physician: {physicianName}</span> : null}
+                {sourceUrl ? <span>Source: {sourceUrl}</span> : null}
+              </div>
+            </div>
+          ) : null}
+        </div>
 
         <section className="grid gap-3 md:grid-cols-2">
           <div className="grid gap-3 rounded-2xl border border-[color:var(--ui-border)] bg-[color:var(--ui-surface-strong)] p-4">

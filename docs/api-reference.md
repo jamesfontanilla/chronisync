@@ -3,6 +3,10 @@
 The API surface currently focuses on AI workflows, uploads, alerts, summaries,
 and webhook ingestion.
 
+When the app is running in demo mode, the response shape should still make the
+seeded or fallback source obvious so demo data is never confused with live
+patient data.
+
 ## `GET /api/gemini`
 
 - Returns the default AI model and supported workflows.
@@ -90,3 +94,12 @@ and webhook ingestion.
 The routes generally return JSON with an error message when validation or
 runtime work fails. Client code should treat non-2xx responses as actionable
 failures and surface the message in the UI.
+
+## Demo Expectations
+
+- `GET /api/gemini` can describe supported workflows even when the AI provider
+  key is not present, but the UI should label that path as seeded or fallback.
+- `POST /api/upload`, `POST /api/alerts`, and `POST /api/summary` are real
+  server mutations and should only be demoed against local or staging data.
+- Webhook examples in documentation should be treated as sample payloads unless
+  the receiving environment is configured to process them live.

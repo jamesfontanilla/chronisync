@@ -159,7 +159,7 @@ export default function ForgotPasswordPage() {
 
         {submitError ? <div style={errorStyle}>{submitError}</div> : null}
 
-        <div style={helperRowStyle}>
+        <div className="auth-actions" style={helperRowStyle}>
           <Link href={ROUTES.AUTH.LOGIN} style={secondaryLinkStyle}>
             Back to sign in
           </Link>

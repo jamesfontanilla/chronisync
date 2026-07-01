@@ -14,6 +14,26 @@ const optionalText = z.preprocess(
   z.string().trim().optional()
 );
 
+const optionalNumber = (
+  schema: z.ZodNumber
+) =>
+  z.preprocess(
+    (value) => {
+      if (typeof value === "string") {
+        const trimmed = value.trim();
+
+        if (trimmed === "") {
+          return undefined;
+        }
+
+        return Number(trimmed);
+      }
+
+      return value;
+    },
+    schema.optional()
+  );
+
 export const foodPhotoMealTypeSchema = z.enum([
   "breakfast",
   "lunch",
@@ -55,6 +75,30 @@ export const foodPhotoFormSchema = z.object({
 });
 
 export type FoodPhotoFormValues = z.infer<typeof foodPhotoFormSchema>;
+
+export const foodPhotoManualFormSchema = z.object({
+  patientId: z.string().trim().min(1, "Patient ID is required."),
+  mealType: foodPhotoMealTypeSchema,
+  mealLabel: z.string().trim().min(1, "Meal label is required."),
+  portionLabel: optionalText,
+  estimatedCalories: optionalNumber(
+    z.number().int().min(0, "Calories must be zero or greater.")
+  ),
+  estimatedCarbsG: optionalNumber(
+    z.number().min(0, "Carbs must be zero or greater.")
+  ),
+  estimatedProteinG: optionalNumber(
+    z.number().min(0, "Protein must be zero or greater.")
+  ),
+  estimatedFatG: optionalNumber(
+    z.number().min(0, "Fat must be zero or greater.")
+  ),
+  notes: optionalText,
+});
+
+export type FoodPhotoManualFormValues = z.infer<
+  typeof foodPhotoManualFormSchema
+>;
 
 export const foodPhotoFiltersSchema = z.object({
   patientId: z.string().trim().optional(),

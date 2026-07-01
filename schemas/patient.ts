@@ -7,6 +7,11 @@
 
 import { z } from "zod";
 
+import {
+  interoperabilityProfileSchema,
+  interoperabilityStandardSchema,
+} from "./auth";
+
 const accountStatusSchema = z.enum([
   "active",
   "inactive",
@@ -76,6 +81,7 @@ const baseUserSchema = z.object({
   status: accountStatusSchema,
   photoURL: z.string().url().optional(),
   emailVerified: z.boolean(),
+  interop: interoperabilityProfileSchema.optional(),
   phoneNumber: z.string().trim().optional(),
   timezone: z.string().trim().optional(),
   language: z.string().trim().optional(),
@@ -93,6 +99,9 @@ export const patientSchema = baseUserSchema.extend({
   chronicConditions: z.array(chronicConditionSchema),
   emergencyContact: emergencyContactSchema,
   physicianId: z.string().min(1).optional(),
+  fhirPatientId: z.string().trim().optional(),
+  openmrsPatientId: z.string().trim().optional(),
+  preferredInteropStandard: interoperabilityStandardSchema.optional(),
 });
 
 export type PatientData = z.infer<typeof patientSchema>;

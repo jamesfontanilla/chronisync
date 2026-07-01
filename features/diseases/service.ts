@@ -7,7 +7,9 @@ import {
   updateDocument as updateFirestoreDocument,
   whereEquals,
 } from "@/lib/firebase/firestore";
+import type { ExportSection } from "@/features/exports/types";
 import type { Disease } from "@/types/disease";
+import type { InteroperabilityStandard } from "@/types/user";
 
 import type { DiseaseFormValues } from "./validation";
 
@@ -63,6 +65,21 @@ export interface DiseaseKnowledgePack {
     adherenceDays?: number;
   };
   summaryFocus: string[];
+}
+
+export interface DiseaseInteropMapping {
+  standard: InteroperabilityStandard;
+  resourceType: string;
+  localFields: string[];
+  exportSections: ExportSection[];
+  notes: string;
+}
+
+export interface DiseaseInteroperabilityProfile {
+  domain: DiseaseKnowledgeDomain;
+  label: string;
+  standards: InteroperabilityStandard[];
+  mappings: DiseaseInteropMapping[];
 }
 
 const DISEASE_KNOWLEDGE_PACKS: Record<
@@ -135,6 +152,152 @@ const DISEASE_KNOWLEDGE_PACKS: Record<
   },
 };
 
+const DISEASE_INTEROPERABILITY_PROFILES: Record<
+  DiseaseKnowledgeDomain,
+  DiseaseInteroperabilityProfile
+> = {
+  diabetes: {
+    domain: "diabetes",
+    label: "Type 2 diabetes",
+    standards: ["fhir", "openmrs"],
+    mappings: [
+      {
+        standard: "fhir",
+        resourceType: "Condition",
+        localFields: ["name", "icd10Code", "status", "severity"],
+        exportSections: ["diseases", "summaries", "provenance"],
+        notes: "Maps the active diagnosis and disease state into FHIR Condition.",
+      },
+      {
+        standard: "fhir",
+        resourceType: "Observation",
+        localFields: ["blood_glucose", "a1c", "weight", "symptoms"],
+        exportSections: ["vitals", "summaries", "ai_outputs"],
+        notes: "Carries glucose and weight readings as FHIR Observation resources.",
+      },
+      {
+        standard: "fhir",
+        resourceType: "MedicationStatement",
+        localFields: ["medications", "adherence"],
+        exportSections: ["medications", "summaries", "audit_trail"],
+        notes: "Keeps treatment history and adherence aligned with the chart.",
+      },
+      {
+        standard: "openmrs",
+        resourceType: "concept-set:diabetes",
+        localFields: ["name", "icd10Code", "blood_glucose", "a1c"],
+        exportSections: ["diseases", "summaries"],
+        notes: "Mirrors the same diagnosis and metric bundle into OpenMRS-style forms.",
+      },
+    ],
+  },
+  hypertension: {
+    domain: "hypertension",
+    label: "Hypertension",
+    standards: ["fhir", "openmrs"],
+    mappings: [
+      {
+        standard: "fhir",
+        resourceType: "Condition",
+        localFields: ["name", "icd10Code", "status", "severity"],
+        exportSections: ["diseases", "summaries", "provenance"],
+        notes: "Maps the blood pressure diagnosis to FHIR Condition.",
+      },
+      {
+        standard: "fhir",
+        resourceType: "Observation",
+        localFields: ["blood_pressure", "weight", "heart_rate"],
+        exportSections: ["vitals", "summaries", "alerts"],
+        notes: "Keeps pressure and trend readings in Observation.",
+      },
+      {
+        standard: "fhir",
+        resourceType: "CarePlan",
+        localFields: ["medications", "goals", "notes"],
+        exportSections: ["treatment_plan", "summaries"],
+        notes: "Captures pressure goals and medication plans for longitudinal care.",
+      },
+      {
+        standard: "openmrs",
+        resourceType: "concept-set:hypertension",
+        localFields: ["blood_pressure", "weight", "medications"],
+        exportSections: ["diseases", "treatment_plan"],
+        notes: "Matches the same readings to OpenMRS-style hypertension concepts.",
+      },
+    ],
+  },
+  ckd: {
+    domain: "ckd",
+    label: "Chronic kidney disease",
+    standards: ["fhir", "openmrs"],
+    mappings: [
+      {
+        standard: "fhir",
+        resourceType: "Condition",
+        localFields: ["name", "icd10Code", "status", "severity"],
+        exportSections: ["diseases", "summaries", "provenance"],
+        notes: "Represents the CKD diagnosis and staging state in FHIR Condition.",
+      },
+      {
+        standard: "fhir",
+        resourceType: "Observation",
+        localFields: ["blood_pressure", "weight", "fluid_intake", "symptoms"],
+        exportSections: ["vitals", "alerts", "summaries"],
+        notes: "Stores trendable renal monitoring values as Observation resources.",
+      },
+      {
+        standard: "fhir",
+        resourceType: "CarePlan",
+        localFields: ["goals", "medications", "notes"],
+        exportSections: ["treatment_plan", "summaries"],
+        notes: "Tracks fluid, BP, and medication goals in a care plan bundle.",
+      },
+      {
+        standard: "openmrs",
+        resourceType: "concept-set:ckd",
+        localFields: ["weight", "blood_pressure", "fluid_intake"],
+        exportSections: ["diseases", "treatment_plan"],
+        notes: "Mirrors the renal monitoring bundle into OpenMRS concepts.",
+      },
+    ],
+  },
+  copd: {
+    domain: "copd",
+    label: "COPD",
+    standards: ["fhir", "openmrs"],
+    mappings: [
+      {
+        standard: "fhir",
+        resourceType: "Condition",
+        localFields: ["name", "status", "severity"],
+        exportSections: ["diseases", "summaries"],
+        notes: "Represents the chronic airway diagnosis in the external record set.",
+      },
+      {
+        standard: "fhir",
+        resourceType: "Observation",
+        localFields: ["oxygen_saturation", "heart_rate", "symptoms"],
+        exportSections: ["vitals", "alerts", "summaries"],
+        notes: "Maps respiratory trends and symptoms to FHIR Observation.",
+      },
+      {
+        standard: "fhir",
+        resourceType: "MedicationStatement",
+        localFields: ["medications", "adherence"],
+        exportSections: ["medications", "summaries"],
+        notes: "Carries inhaler and rescue medication history into the export set.",
+      },
+      {
+        standard: "openmrs",
+        resourceType: "concept-set:copd",
+        localFields: ["oxygen_saturation", "medications"],
+        exportSections: ["diseases", "medications"],
+        notes: "Mirrors the respiratory bundle into OpenMRS-style concepts.",
+      },
+    ],
+  },
+};
+
 const DISEASE_NAME_ALIASES: Record<DiseaseKnowledgeDomain, string[]> = {
   diabetes: ["diabetes", "type 2 diabetes", "t2dm", "type 1 diabetes", "t1dm"],
   hypertension: ["hypertension", "high blood pressure", "bp"],
@@ -198,6 +361,34 @@ export function resolveDiseaseKnowledgePack(
 
 export function listDiseaseKnowledgePacks(): DiseaseKnowledgePack[] {
   return Object.values(DISEASE_KNOWLEDGE_PACKS);
+}
+
+export function resolveDiseaseInteroperabilityProfile(
+  disease: Pick<Disease, "name" | "icd10Code"> | string
+): DiseaseInteroperabilityProfile | null {
+  const resolved =
+    typeof disease === "string"
+      ? matchDiseaseDomain(disease)
+      : matchDiseaseDomain(disease.name, disease.icd10Code);
+
+  return resolved ? DISEASE_INTEROPERABILITY_PROFILES[resolved] : null;
+}
+
+export function listDiseaseInteroperabilityProfiles(): DiseaseInteroperabilityProfile[] {
+  return Object.values(DISEASE_INTEROPERABILITY_PROFILES);
+}
+
+export function describeDiseaseInteroperabilityProfile(
+  profile: DiseaseInteroperabilityProfile
+): string {
+  const standards = profile.standards.map((standard) => standard.toUpperCase());
+  const resourceTypes = [
+    ...new Set(profile.mappings.map((mapping) => mapping.resourceType)),
+  ];
+
+  return `${profile.label} maps to ${standards.join(" and ")} resources: ${resourceTypes.join(
+    ", "
+  )}.`;
 }
 
 export function getDiseaseKnowledgePackWindowDays(

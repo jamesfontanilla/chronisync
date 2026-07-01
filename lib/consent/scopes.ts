@@ -39,6 +39,22 @@ export const CONSENT_SCOPE_GROUP_VALUES = [
 export type ConsentScopeGroup =
   (typeof CONSENT_SCOPE_GROUP_VALUES)[number];
 
+export const CONSENT_SCOPE_GROUP_DESCRIPTIONS: Record<
+  ConsentScopeGroup,
+  string
+> = {
+  profile: "Identity, demographics, and contact details.",
+  clinical:
+    "Health readings, medications, symptoms, disease records, and documents.",
+  support:
+    "Trusted caregiver support, including explicit on-behalf-of logging.",
+  automation:
+    "AI-assisted extraction, summarization, and review workflows.",
+  sharing:
+    "Exports, downloads, and device handoff for sharing outside the app.",
+  emergency: "Break-glass access for urgent care situations.",
+};
+
 const CONSENT_SCOPE_GROUP_MAP: Record<
   ConsentScopeGroup,
   readonly ConsentScope[]
@@ -119,6 +135,12 @@ export function getConsentScopeGroupLabel(
   group: ConsentScopeGroup
 ): string {
   return humanize(group);
+}
+
+export function getConsentScopeGroupDescription(
+  group: ConsentScopeGroup
+): string {
+  return CONSENT_SCOPE_GROUP_DESCRIPTIONS[group];
 }
 
 export function describeConsentScopeAccess(

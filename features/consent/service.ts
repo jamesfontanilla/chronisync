@@ -15,12 +15,21 @@ import {
 } from "@/lib/firebase/firestore";
 import { formatDateTime, humanize } from "@/lib/utils";
 import {
+  DEFAULT_CONSENT_AUDIT_RETENTION_DAYS,
+  describeConsentAuditRetention,
+} from "@/lib/privacy/policy";
+import {
   getConsentStatusLabel,
   hasActiveConsentForScope,
   isConsentActive,
   isConsentExpired,
   summarizeConsentRecords,
 } from "@/lib/privacy/consent";
+import {
+  getConsentScopeGroup,
+  getConsentScopeGroupDescription,
+  getConsentScopeGroupLabel,
+} from "@/lib/consent/scopes";
 
 import type {
   ConsentCreateInput,
@@ -83,6 +92,44 @@ function parseDateOrFallback(
   return parsed;
 }
 
+interface ConsentLifecycleInput {
+  scope: ConsentRecord["scope"];
+  status: ConsentRecord["status"];
+  targetType: ConsentRecord["targetType"] | undefined;
+  effectiveAt: Date;
+  expiresAt: Date | undefined;
+}
+
+function buildConsentMetadata(
+  consent: ConsentLifecycleInput,
+  metadata?: Record<string, unknown>
+): Record<string, unknown> {
+  const scopeGroup = getConsentScopeGroup(consent.scope);
+
+  return {
+    ...(metadata ?? {}),
+    lifecycle: {
+      status: consent.status,
+      validity:
+        consent.status === "granted"
+          ? consent.expiresAt
+            ? "time_limited"
+            : "until_revoked"
+          : consent.status,
+      auditRetentionDays: DEFAULT_CONSENT_AUDIT_RETENTION_DAYS,
+      auditRetentionLabel: describeConsentAuditRetention(),
+      scopeGroup,
+      scopeGroupLabel: getConsentScopeGroupLabel(scopeGroup),
+      scopeGroupDescription: getConsentScopeGroupDescription(scopeGroup),
+      targetType: consent.targetType ?? "caregiver",
+      effectiveAt: consent.effectiveAt.toISOString(),
+      ...(consent.expiresAt
+        ? { expiresAt: consent.expiresAt.toISOString() }
+        : {}),
+    },
+  };
+}
+
 function matchesQuery(consent: ConsentRecord, query: string): boolean {
   const normalized = query.trim().toLowerCase();
 
@@ -138,6 +185,7 @@ export function buildConsentRecord(
   const timestamp = createTimestamp();
   const effectiveAt = data.effectiveAt ?? timestamp;
   const status = data.status ?? "granted";
+  const expiresAt = data.expiresAt;
 
   return {
     ...data,
@@ -154,6 +202,16 @@ export function buildConsentRecord(
     ...(status === "expired" && !data.expiresAt
       ? { expiresAt: timestamp }
       : {}),
+    metadata: buildConsentMetadata(
+      {
+        scope: data.scope,
+        status,
+        targetType: data.targetType,
+        effectiveAt,
+        expiresAt,
+      },
+      data.metadata
+    ),
     createdAt: timestamp,
     updatedAt: timestamp,
   };
@@ -337,6 +395,19 @@ export async function updateConsent(
   const next: ConsentRecord = {
     ...current,
     ...updates,
+    metadata: buildConsentMetadata(
+      {
+        scope: updates.scope ?? current.scope,
+        status: updates.status ?? current.status,
+        targetType: updates.targetType ?? current.targetType,
+        effectiveAt: updates.effectiveAt ?? current.effectiveAt,
+        expiresAt: updates.expiresAt ?? current.expiresAt,
+      },
+      {
+        ...(current.metadata ?? {}),
+        ...(updates.metadata ?? {}),
+      }
+    ),
     updatedAt: createTimestamp(),
   };
 

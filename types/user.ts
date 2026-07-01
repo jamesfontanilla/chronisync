@@ -13,6 +13,29 @@ export type AccountStatus =
   | "pending"
   | "suspended";
 
+export type InteroperabilityStandard = "fhir" | "openmrs";
+
+export type InteroperabilityMappingStatus =
+  | "unmapped"
+  | "partial"
+  | "mapped";
+
+export interface InteroperabilityReference {
+  standard: InteroperabilityStandard;
+  resourceType: string;
+  resourceId: string;
+  identifier?: string;
+  url?: string;
+}
+
+export interface InteroperabilityProfile {
+  mappingStatus: InteroperabilityMappingStatus;
+  primaryStandard?: InteroperabilityStandard;
+  references: InteroperabilityReference[];
+  externalIds?: Record<string, string>;
+  lastMappedAt?: Date;
+}
+
 export interface User {
   /**
    * Firebase Authentication UID
@@ -48,6 +71,11 @@ export interface User {
    * Email verification status.
    */
   emailVerified: boolean;
+
+  /**
+   * Cross-system mapping metadata for FHIR/OpenMRS style records.
+   */
+  interop?: InteroperabilityProfile;
 
   /**
    * Contact number.

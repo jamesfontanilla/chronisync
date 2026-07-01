@@ -6,6 +6,7 @@
  */
 
 import type { PrivacyScope } from "@/lib/privacy/policy";
+import type { CaregiverAccessTier } from "@/lib/privacy/policy";
 
 export type CaregiverPermission = PrivacyScope;
 
@@ -41,6 +42,7 @@ export interface CaregiverRecord {
   email?: string;
   phoneNumber?: string;
   permissions: CaregiverPermission[];
+  accessTier: CaregiverAccessTier;
   status: CaregiverStatus;
   isPrimary: boolean;
   notes?: string;
@@ -101,6 +103,8 @@ export interface CaregiverSummary {
 export interface CaregiverViewModel {
   caregiver: CaregiverRecord;
   relationshipLabel: string;
+  accessTierLabel: string;
+  accessTierDescription: string;
   statusLabel: string;
   permissionLabel: string;
   timeLabel: string;

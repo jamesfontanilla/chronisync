@@ -8,6 +8,10 @@
 import { COLLECTIONS } from "@/config/firebase";
 import { type DashboardMetric, type DashboardTrendSeries } from "@/features/dashboard/service";
 import { listAlertsByPhysician } from "@/features/alerts/service";
+import {
+  AI_DRAFT_DISCLAIMER,
+  compactAiMetadata,
+} from "@/lib/ai/metadata";
 import { getInitials } from "@/lib/utils";
 import { logger } from "@/lib/logger";
 import { queryDocuments, whereEquals } from "@/lib/firebase/firestore";
@@ -230,9 +234,30 @@ function createDemoSummaries(
       ],
       generatedBy: "chronisync-ai",
       model: "gemini-2.5-flash",
-      metadata: {
+      metadata: compactAiMetadata({
+        aiDisclaimer: AI_DRAFT_DISCLAIMER,
         confidence: 0.84,
-      },
+        traceability: {
+          kind: "visit_summary",
+          sourceNotesLength: 168,
+          sourceCounts: {
+            patientComplaints: 2,
+            physicianNotes: 2,
+            medicationChanges: 1,
+            followUpSchedule: 2,
+            vitalHighlights: 2,
+            documentHighlights: 1,
+          },
+          context: {
+            patientId: "patient-anna-cruz",
+            physicianId,
+            encounterId: "encounter-2026-06-30",
+            patientName: "Anna Cruz",
+            physicianName: "Dr. Santos",
+            visitDate: "2026-06-30",
+          },
+        },
+      }),
       createdAt: createTimestamp(1),
       updatedAt: createTimestamp(1),
     },

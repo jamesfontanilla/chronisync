@@ -5,7 +5,7 @@
  * =============================================================================
  */
 
-import type { User } from "@/types/user";
+import type { InteroperabilityStandard, User } from "@/types/user";
 
 /* -------------------------------------------------------------------------- */
 /*                              Enumerations                                  */
@@ -73,6 +73,21 @@ export interface Physician extends User {
    * Derived value for dashboard display.
    */
   activePatientCount?: number;
+
+  /**
+   * FHIR Practitioner identifier for interoperability exports.
+   */
+  fhirPractitionerId?: string;
+
+  /**
+   * OpenMRS provider identifier for interoperability exports.
+   */
+  openmrsProviderId?: string;
+
+  /**
+   * Preferred interoperability standard for exports.
+   */
+  preferredInteropStandard?: InteroperabilityStandard;
 }
 
 /* -------------------------------------------------------------------------- */

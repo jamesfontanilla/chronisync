@@ -18,6 +18,13 @@ pnpm build
 pnpm lint
 ```
 
+## Demo vs Production
+
+- Demo and local development can use Firebase emulators, seeded data, and fallback AI outputs.
+- Production should use the real Firebase project, real Storage bucket, and real AI credentials.
+- Mock data is acceptable in the UI, but it must be labeled as seeded or demo-only so it is not mistaken for live patient data.
+- Seed scripts belong in development and staging workflows, not in production startup.
+
 ## Environment Variables
 
 ### Client-side Firebase

@@ -111,7 +111,7 @@ export function Navbar({
           gap: 1rem;
           width: min(1240px, calc(100% - 2rem));
           margin: 1rem auto 0;
-          padding: 0.9rem 1rem;
+          padding: 1rem 1.15rem;
           border-radius: 999px;
           border: 1px solid var(--ui-border);
           background: var(--ui-surface);
@@ -165,9 +165,10 @@ export function Navbar({
         }
 
         .navbar__link {
-          padding: 0.55rem 0.85rem;
+          padding: 0.7rem 1rem;
           border-radius: 999px;
-          color: var(--ui-muted);
+          color: var(--ui-text);
+          font-weight: 600;
           border: 1px solid transparent;
           transition:
             color 180ms ease,
@@ -193,7 +194,7 @@ export function Navbar({
           align-items: center;
           justify-content: center;
           gap: 0.5rem;
-          min-height: 2.9rem;
+          min-height: 3rem;
           padding: 0 1rem;
           border-radius: 999px;
           border: 1px solid transparent;
@@ -225,7 +226,7 @@ export function Navbar({
         }
 
         .navbar__theme {
-          width: 2.9rem;
+          width: 3rem;
           padding: 0;
           color: var(--ui-accent);
           border-color: var(--ui-border);

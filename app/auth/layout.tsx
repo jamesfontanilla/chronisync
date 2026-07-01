@@ -7,9 +7,10 @@ import { AuthProvider } from "@/providers/AuthProvider";
 import { AUTH_ROLE_OPTIONS } from "@/lib/auth/roles";
 
 const shellStyle = {
-  minHeight: "100vh",
+  minHeight: "100dvh",
   display: "grid",
-  gridTemplateColumns: "minmax(0, 1.05fr) minmax(420px, 0.95fr)",
+  gridTemplateColumns: "var(--auth-shell-columns)",
+  gap: "var(--auth-shell-gap)",
   background:
     "radial-gradient(circle at top left, rgba(15, 118, 110, 0.32), transparent 36%), radial-gradient(circle at bottom right, rgba(234, 179, 8, 0.18), transparent 32%), linear-gradient(135deg, #051419 0%, #0a2230 52%, #f5efe5 52%, #f8f4ec 100%)",
   color: "#e6f6f7",
@@ -18,7 +19,7 @@ const shellStyle = {
 const heroStyle = {
   position: "relative",
   overflow: "hidden",
-  padding: "clamp(2rem, 5vw, 4rem)",
+  padding: "var(--auth-hero-padding)",
   display: "flex",
   alignItems: "stretch",
 } as const;
@@ -45,7 +46,7 @@ const eyebrowStyle = {
 
 const titleStyle = {
   margin: "0.75rem 0 0",
-  fontSize: "clamp(2.3rem, 5vw, 4.8rem)",
+  fontSize: "clamp(1.95rem, 5vw, 4.8rem)",
   lineHeight: 0.95,
   letterSpacing: "-0.05em",
   color: "#f6fbfb",
@@ -60,8 +61,8 @@ const bodyStyle = {
 } as const;
 
 const metricsStyle = {
-  display: "grid",
-  gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+  display: "var(--auth-metrics-display)",
+  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
   gap: "0.9rem",
   marginTop: "2rem",
 } as const;
@@ -77,7 +78,7 @@ const formColumnStyle = {
   display: "flex",
   alignItems: "stretch",
   justifyContent: "center",
-  padding: "clamp(1.25rem, 4vw, 3rem)",
+  padding: "var(--auth-form-padding)",
   background:
     "linear-gradient(180deg, rgba(248, 244, 236, 0.92), rgba(245, 239, 229, 0.98))",
   color: "#08232b",
@@ -137,7 +138,7 @@ export default function AuthLayout({
               Patient and physician entry points
             </div>
 
-            <div style={metricsStyle}>
+            <div className="auth-metrics" style={metricsStyle}>
               {AUTH_ROLE_OPTIONS.map((option) => (
                 <div key={option.value} style={metricCardStyle}>
                   <div
@@ -173,7 +174,7 @@ export default function AuthLayout({
       <style jsx>{`
         @media (max-width: 960px) {
           .auth-shell {
-            grid-template-columns: 1fr;
+            grid-template-columns: 1fr !important;
           }
 
           .auth-hero {
@@ -193,25 +194,34 @@ export default function AuthLayout({
           }
 
           .auth-hero {
-            padding-bottom: 0;
+            padding-bottom: 0 !important;
           }
 
           .auth-form-column {
-            padding-top: 0;
+            padding-top: 0 !important;
+          }
+
+          .auth-metrics {
+            margin-top: 1.5rem;
           }
         }
 
         @media (max-width: 560px) {
-          .auth-shell {
-            display: block;
+          .auth-hero {
+            padding: 1rem 1rem 0.5rem !important;
           }
 
-          .auth-hero {
-            padding: 1rem;
+          .auth-metrics {
+            display: none !important;
           }
 
           .auth-form-column {
-            padding: 1rem;
+            padding: 0 1rem 1rem !important;
+          }
+
+          :global(.auth-actions) {
+            flex-direction: column;
+            align-items: stretch;
           }
         }
       `}</style>

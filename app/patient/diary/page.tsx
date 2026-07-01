@@ -123,9 +123,17 @@ export default function PatientDiaryPage() {
           </span>
         }
         actions={
-          <Button asChild variant="glass">
-            <Link href="/patient/add">Quick add</Link>
-          </Button>
+          <div className="flex flex-wrap gap-3">
+            <Button asChild variant="glass">
+              <Link href="/patient/add#voice-first">Voice log</Link>
+            </Button>
+            <Button asChild variant="secondary">
+              <Link href="/patient/partners">Caregiver support</Link>
+            </Button>
+            <Button asChild variant="glass">
+              <Link href="/patient/add">Quick add</Link>
+            </Button>
+          </div>
         }
         level={1}
       />

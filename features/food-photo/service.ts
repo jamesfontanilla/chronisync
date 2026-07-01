@@ -250,7 +250,9 @@ export function buildFoodPhotoRecord(
 ): FoodPhotoRecord {
   const timestamp = data.capturedAt ?? createTimestamp();
   const inferred = inferMealProfile(data.mealLabel);
-  const suggestedEdits = data.suggestedEdits ?? inferred.suggestedEdits;
+  const isManualSource = data.source === "manual";
+  const suggestedEdits =
+    data.suggestedEdits ?? (isManualSource ? [] : inferred.suggestedEdits);
 
   return normalizeRecord({
     id: createRecordId(),
@@ -260,7 +262,7 @@ export function buildFoodPhotoRecord(
     imageName: data.imageName.trim(),
     source: data.source ?? "photo",
     status: data.status ?? "draft",
-    confidence: data.confidence ?? inferred.confidence,
+    confidence: data.confidence ?? (isManualSource ? 0.95 : inferred.confidence),
     estimatedCalories: data.estimatedCalories ?? inferred.estimatedCalories,
     estimatedCarbsG: data.estimatedCarbsG ?? inferred.estimatedCarbsG,
     estimatedProteinG: data.estimatedProteinG ?? inferred.estimatedProteinG,
@@ -286,7 +288,10 @@ export function buildFoodPhotoViewModel(
     statusLabel: humanize(record.status),
     confidenceLabel: `${Math.round(record.confidence * 100)}% confidence`,
     timeLabel: formatDateTime(record.capturedAt),
-    preview: `${record.mealLabel} - ${record.estimatedCalories} kcal estimate`,
+    preview:
+      record.source === "manual"
+        ? `${record.mealLabel} - manual entry`
+        : `${record.mealLabel} - ${record.estimatedCalories} kcal estimate`,
   };
 }
 

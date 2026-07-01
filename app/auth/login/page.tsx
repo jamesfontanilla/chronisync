@@ -210,7 +210,7 @@ export default function LoginPage() {
 
         {submitError ? <div style={errorStyle}>{submitError}</div> : null}
 
-        <div style={helperRowStyle}>
+        <div className="auth-actions" style={helperRowStyle}>
           <Link href={ROUTES.AUTH.FORGOT_PASSWORD} style={secondaryLinkStyle}>
             Forgot your password?
           </Link>

@@ -238,7 +238,7 @@ export default function RegisterPage() {
 
         {submitError ? <div style={errorStyle}>{submitError}</div> : null}
 
-        <div style={helperRowStyle}>
+        <div className="auth-actions" style={helperRowStyle}>
           <Link href={ROUTES.AUTH.LOGIN} style={secondaryLinkStyle}>
             Already have an account?
           </Link>

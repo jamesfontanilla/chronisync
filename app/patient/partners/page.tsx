@@ -18,6 +18,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ROUTES } from "@/config/route";
+import {
+  getCaregiverAccessTierDescription,
+  getCaregiverAccessTierLabel,
+} from "@/lib/privacy/policy";
 import { getInitials, humanize } from "@/lib/utils";
 
 const partners = [
@@ -25,7 +29,8 @@ const partners = [
     name: "Dr. Mia Santos",
     role: "physician",
     status: "active",
-    access: "review + summaries",
+    accessTier: "read_only",
+    accessSummary: "review + summaries",
     email: "mia.santos@example.com",
     avatar:
       "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=160&q=80",
@@ -34,7 +39,8 @@ const partners = [
     name: "Marco Cruz",
     role: "caregiver",
     status: "active",
-    access: "log on behalf",
+    accessTier: "log_on_behalf_of",
+    accessSummary: "log on behalf",
     email: "marco.cruz@example.com",
     avatar:
       "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=160&q=80",
@@ -45,7 +51,8 @@ function PartnerCard({
   name,
   role,
   status,
-  access,
+  accessTier,
+  accessSummary,
   email,
   avatar,
 }: (typeof partners)[number]) {
@@ -64,9 +71,17 @@ function PartnerCard({
               <Badge variant="glass">{humanize(status)}</Badge>
             </div>
             <p className="m-0 text-sm text-[color:var(--ui-muted)]">{email}</p>
+            <p className="m-0 text-sm text-[color:var(--ui-muted)]">
+              {getCaregiverAccessTierDescription(accessTier)}
+            </p>
           </div>
         </div>
-        <Badge variant="outline">{access}</Badge>
+        <div className="grid justify-items-end gap-2">
+          <Badge variant="outline">{getCaregiverAccessTierLabel(accessTier)}</Badge>
+          <span className="text-xs text-[color:var(--ui-muted)]">
+            {accessSummary}
+          </span>
+        </div>
       </CardHeader>
     </Card>
   );

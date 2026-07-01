@@ -5,7 +5,7 @@
  * =============================================================================
  */
 
-import type { User } from "@/types/user";
+import type { InteroperabilityStandard, User } from "@/types/user";
 
 /* -------------------------------------------------------------------------- */
 /*                              Enumerations                                  */
@@ -97,6 +97,21 @@ export interface Patient extends User {
    * Primary physician UID.
    */
   physicianId?: string;
+
+  /**
+   * FHIR Patient identifier, when mapped from an external record system.
+   */
+  fhirPatientId?: string;
+
+  /**
+   * OpenMRS Patient identifier, when mapped from a clinic record system.
+   */
+  openmrsPatientId?: string;
+
+  /**
+   * Preferred interoperability standard for exports.
+   */
+  preferredInteropStandard?: InteroperabilityStandard;
 }
 
 /* -------------------------------------------------------------------------- */

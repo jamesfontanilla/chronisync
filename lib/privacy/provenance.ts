@@ -6,6 +6,13 @@
  */
 
 import { humanize } from "@/lib/utils";
+import {
+  DEFAULT_EXPORT_RETENTION_DAYS,
+  DEFAULT_PROVENANCE_RETENTION_DAYS,
+  describeExportRetentionWindow,
+  describeProvenanceRetentionWindow,
+  getDefaultExportExpirationDate,
+} from "./policy";
 
 import { z } from "zod";
 
@@ -88,6 +95,17 @@ export interface ProvenanceSummary {
   redacted: number;
 }
 
+export type ProvenanceLifecycleMode =
+  | "mirrors_subject"
+  | "time_limited";
+
+export interface ProvenanceLifecyclePolicy {
+  mode: ProvenanceLifecycleMode;
+  retentionDays?: number;
+  retentionLabel: string;
+  expiresAt?: Date;
+}
+
 function createRecordId(): string {
   return typeof globalThis.crypto?.randomUUID === "function"
     ? globalThis.crypto.randomUUID()
@@ -136,6 +154,47 @@ function hashString(value: string): string {
   return hash.toString(36).padStart(8, "0");
 }
 
+function addDays(base: Date, days: number): Date {
+  const next = new Date(base);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+
+export function buildProvenanceLifecyclePolicy(
+  input: Pick<ProvenanceInput, "subjectType">,
+  createdAt: Date
+): ProvenanceLifecyclePolicy {
+  switch (input.subjectType) {
+    case "export":
+      return {
+        mode: "time_limited",
+        retentionDays: DEFAULT_EXPORT_RETENTION_DAYS,
+        retentionLabel: describeExportRetentionWindow(),
+        expiresAt: getDefaultExportExpirationDate(createdAt),
+      };
+    case "consent":
+      return {
+        mode: "time_limited",
+        retentionDays: DEFAULT_PROVENANCE_RETENTION_DAYS,
+        retentionLabel: describeProvenanceRetentionWindow(
+          DEFAULT_PROVENANCE_RETENTION_DAYS
+        ),
+        expiresAt: addDays(createdAt, DEFAULT_PROVENANCE_RETENTION_DAYS),
+      };
+    case "caregiver":
+      return {
+        mode: "mirrors_subject",
+        retentionLabel:
+          "Retained while the caregiver relationship remains active.",
+      };
+    default:
+      return {
+        mode: "mirrors_subject",
+        retentionLabel: "Retained with the source record.",
+      };
+  }
+}
+
 export function createProvenanceFingerprint(value: unknown): string {
   return `fp_${hashString(stringifyForFingerprint(value))}`;
 }
@@ -144,6 +203,7 @@ export function buildProvenanceRecord(
   input: ProvenanceInput
 ): ProvenanceRecord {
   const timestamp = createTimestamp();
+  const lifecycle = buildProvenanceLifecyclePolicy(input, timestamp);
   const fingerprintBase = {
     subjectType: input.subjectType,
     subjectId: input.subjectId,
@@ -174,18 +234,11 @@ export function buildProvenanceRecord(
     ...(input.reviewedBy ? { reviewedBy: input.reviewedBy } : {}),
     ...(input.reviewedAt ? { reviewedAt: input.reviewedAt } : {}),
     createdAt: timestamp,
-    ...(input.metadata
-      ? {
-          metadata: {
-            ...input.metadata,
-            fingerprint: createProvenanceFingerprint(fingerprintBase),
-          },
-        }
-      : {
-          metadata: {
-            fingerprint: createProvenanceFingerprint(fingerprintBase),
-          },
-        }),
+    metadata: {
+      ...(input.metadata ?? {}),
+      fingerprint: createProvenanceFingerprint(fingerprintBase),
+      lifecycle,
+    },
   };
 }
 
@@ -249,4 +302,27 @@ export function describeProvenanceRecord(
 ): string {
   const sourceLabel = record.sourceLabel ?? humanize(record.sourceKind);
   return `${humanize(record.subjectType)} from ${sourceLabel}`;
+}
+
+export function describeProvenanceLifecycle(
+  record: ProvenanceRecord
+): string {
+  const lifecycle = record.metadata?.["lifecycle"];
+
+  if (
+    lifecycle &&
+    typeof lifecycle === "object" &&
+    "retentionLabel" in lifecycle &&
+    typeof (lifecycle as { retentionLabel?: unknown }).retentionLabel ===
+      "string"
+  ) {
+    return (lifecycle as { retentionLabel: string }).retentionLabel;
+  }
+
+  return buildProvenanceLifecyclePolicy(
+    {
+      subjectType: record.subjectType,
+    },
+    record.createdAt
+  ).retentionLabel;
 }

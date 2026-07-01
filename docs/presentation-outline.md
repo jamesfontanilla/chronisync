@@ -33,12 +33,14 @@ This outline is intended for a concise product demo or hackathon pitch.
 - Extract structured clinical data
 - Review the generated summary
 - Surface alerts and follow-up items
+- Call out when the screen is seeded demo data versus a live backend response
 
 ## Slide 6 - Architecture
 
 - Next.js frontend
 - Firebase Auth, Firestore, and Storage
 - Server routes for AI, uploads, alerts, summaries, and webhooks
+- Demo mode can use seeded data or emulators, but the deployed build should keep the real route boundaries intact
 
 ## Slide 7 - Safety and Control
 
