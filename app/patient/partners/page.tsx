@@ -6,7 +6,6 @@ import {
   UserRoundPlus,
 } from "lucide-react";
 
-import { BottomNav } from "@/components/patient-mobile/BottomNav";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -89,7 +88,7 @@ function PartnerCard({
 
 export default function PatientPartnersPage() {
   return (
-    <main className="grid gap-6 p-4 pb-28 sm:p-6 lg:p-8">
+    <main className="grid gap-6 p-4 sm:p-6 lg:p-8">
       <PageHeader
         eyebrow="Patient workspace"
         title="Partners"
@@ -184,7 +183,6 @@ export default function PatientPartnersPage() {
         </Card>
       </section>
 
-      <BottomNav />
     </main>
   );
 }

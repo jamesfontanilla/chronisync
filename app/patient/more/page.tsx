@@ -12,7 +12,6 @@ import {
   TabletSmartphone,
 } from "lucide-react";
 
-import { BottomNav } from "@/components/patient-mobile/BottomNav";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -65,7 +64,7 @@ const settingsGroups = [
 
 export default function PatientMorePage() {
   return (
-    <main className="grid gap-6 p-4 pb-28 sm:p-6 lg:p-8">
+    <main className="grid gap-6 p-4 sm:p-6 lg:p-8">
       <PageHeader
         eyebrow="Patient workspace"
         title="More"
@@ -186,7 +185,6 @@ export default function PatientMorePage() {
         </Card>
       </section>
 
-      <BottomNav />
     </main>
   );
 }

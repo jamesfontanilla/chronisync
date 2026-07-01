@@ -9,7 +9,6 @@ import {
   SquareCheckBig,
 } from "lucide-react";
 
-import { BottomNav } from "@/components/patient-mobile/BottomNav";
 import { DiaryFilters, type DiaryFilterValue } from "@/components/patient-mobile/DiaryFilters";
 import { QuickLogTiles } from "@/components/patient-mobile/QuickLogTiles";
 import { PageHeader } from "@/components/common/PageHeader";
@@ -111,7 +110,7 @@ export default function PatientDiaryPage() {
   );
 
   return (
-    <main className="grid gap-6 p-4 pb-28 sm:p-6 lg:p-8">
+    <main className="grid gap-6 p-4 sm:p-6 lg:p-8">
       <PageHeader
         eyebrow="Patient workspace"
         title="Diary"
@@ -251,7 +250,6 @@ export default function PatientDiaryPage() {
         </Card>
       </section>
 
-      <BottomNav />
     </main>
   );
 }

@@ -1,6 +1,6 @@
 export default function DiaryLoading() {
   return (
-    <main className="grid gap-6 p-4 pb-28 sm:p-6 lg:p-8">
+    <main className="grid gap-6 p-4 sm:p-6 lg:p-8">
       <div className="grid gap-3">
         <div className="h-4 w-28 animate-pulse rounded-full bg-[color:var(--ui-border)]" />
         <div className="h-10 w-44 animate-pulse rounded-full bg-[color:var(--ui-border)]" />
