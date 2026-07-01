@@ -10,6 +10,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import {
+  getAlertFamilyLabel,
+  isInteractionAlert,
+} from "@/features/alerts/service";
 import { formatDateTime, humanize } from "@/lib/utils";
 import type { Alert } from "@/types/alert";
 
@@ -49,6 +53,7 @@ export function AlertCard({
   className,
 }: AlertCardProps) {
   const LevelIcon = getLevelIcon(alert.level);
+  const familyLabel = getAlertFamilyLabel(alert);
 
   return (
     <Card className={className}>
@@ -64,11 +69,14 @@ export function AlertCard({
               <Badge variant={getLevelVariant(alert.level)}>
                 {humanize(alert.level)}
               </Badge>
+              <Badge variant={isInteractionAlert(alert) ? "destructive" : "outline"}>
+                {familyLabel}
+              </Badge>
               <Badge variant="outline">{humanize(alert.status)}</Badge>
             </div>
             <CardDescription>{alert.message}</CardDescription>
             <p className="m-0 text-sm text-[color:var(--ui-muted)]">
-              {alert.metric ? `Metric: ${alert.metric}` : "Clinical alert"}
+              {alert.metric ? `Metric: ${alert.metric}` : familyLabel}
               {alert.ruleId ? ` | Rule: ${alert.ruleId}` : ""}
             </p>
           </div>

@@ -15,6 +15,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ROUTES } from "@/config/route";
+import { summarizeAlerts } from "@/features/alerts/service";
 import { usePhysicianWorkspaceQuery } from "@/features/physician/hooks";
 import { buildPhysicianDemoWorkspaceSnapshot } from "@/features/physician/service";
 import { formatDateTime, humanize } from "@/lib/utils";
@@ -24,6 +25,7 @@ const planIcons = [ClipboardCheck, Pill, ShieldCheck, Sparkles] as const;
 export default function PhysicianTreatmentPage() {
   const { data } = usePhysicianWorkspaceQuery();
   const workspace = data ?? buildPhysicianDemoWorkspaceSnapshot();
+  const alertSummary = summarizeAlerts(workspace.alerts);
   const openAlerts = workspace.alerts.filter(
     (alert) => alert.status === "open" || alert.status === "acknowledged"
   );
@@ -95,10 +97,30 @@ export default function PhysicianTreatmentPage() {
               <CardContent className="pt-0 text-sm leading-6 text-[color:var(--ui-muted)]">
                 {item.detail}
               </CardContent>
-            </Card>
-          );
-        })}
+          </Card>
+        );
+      })}
       </section>
+
+      <Card>
+        <CardHeader className="gap-2">
+          <CardTitle>Alert families</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-wrap gap-2">
+          <Badge variant="secondary">
+            {alertSummary.guideline} guideline alerts
+          </Badge>
+          <Badge variant="destructive">
+            {alertSummary.interaction} interaction flags
+          </Badge>
+          <Badge variant="outline">
+            {alertSummary.manual} manual alerts
+          </Badge>
+          <Badge variant="outline">
+            {alertSummary.system} system alerts
+          </Badge>
+        </CardContent>
+      </Card>
 
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)]">
         <Card>

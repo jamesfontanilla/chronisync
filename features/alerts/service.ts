@@ -22,15 +22,59 @@ import {
 } from "@/services/alert.service";
 import { queryDocuments, whereEquals } from "@/lib/firebase/firestore";
 import { formatDateTime, humanize } from "@/lib/utils";
+import {
+  getClinicalAlertFamilyLabel,
+  isInteractionClinicalFinding,
+} from "@/lib/rules/alerts";
 import type { Alert } from "@/types/alert";
 
 import type {
   AlertFilters,
+  AlertFamily,
   AlertSummary,
   AlertViewModel,
 } from "./types";
 
 export type { AlertCreateInput, AlertRecord, AlertUpdateInput };
+
+function isAlertFamily(value: unknown): value is AlertFamily {
+  return (
+    value === "guideline" ||
+    value === "interaction" ||
+    value === "manual" ||
+    value === "system"
+  );
+}
+
+export function getAlertFamily(alert: AlertRecord): AlertFamily {
+  const metadataFamily = alert.metadata?.["alertFamily"];
+
+  if (isAlertFamily(metadataFamily)) {
+    return metadataFamily;
+  }
+
+  if (isInteractionClinicalFinding(alert)) {
+    return "interaction";
+  }
+
+  if (alert.source === "manual") {
+    return "manual";
+  }
+
+  if (alert.source === "system") {
+    return "system";
+  }
+
+  return "guideline";
+}
+
+export function getAlertFamilyLabel(alert: AlertRecord): string {
+  return getClinicalAlertFamilyLabel(getAlertFamily(alert));
+}
+
+export function isInteractionAlert(alert: AlertRecord): boolean {
+  return getAlertFamily(alert) === "interaction";
+}
 
 function isAlertOpen(alert: AlertRecord): boolean {
   return alert.status !== "resolved" && alert.status !== "dismissed";
@@ -99,10 +143,14 @@ function matchesQuery(alert: AlertRecord, query: string): boolean {
 export function buildAlertViewModel(
   alert: AlertRecord
 ): AlertViewModel {
+  const family = getAlertFamily(alert);
+
   return {
     alert,
     levelLabel: humanize(alert.level),
     statusLabel: humanize(alert.status),
+    family,
+    familyLabel: getClinicalAlertFamilyLabel(family),
     timeLabel: formatDateTime(alert.createdAt),
     summary: alert.notes ?? alert.message,
     isOpen: isAlertOpen(alert),
@@ -115,6 +163,23 @@ export function summarizeAlerts(
   return alerts.reduce<AlertSummary>(
     (accumulator, alert) => {
       accumulator.total += 1;
+      const family = getAlertFamily(alert);
+
+      switch (family) {
+        case "interaction":
+          accumulator.interaction += 1;
+          break;
+        case "manual":
+          accumulator.manual += 1;
+          break;
+        case "system":
+          accumulator.system += 1;
+          break;
+        case "guideline":
+        default:
+          accumulator.guideline += 1;
+          break;
+      }
 
       switch (alert.status) {
         case "acknowledged":
@@ -139,6 +204,10 @@ export function summarizeAlerts(
       acknowledged: 0,
       resolved: 0,
       dismissed: 0,
+      guideline: 0,
+      interaction: 0,
+      manual: 0,
+      system: 0,
     }
   );
 }

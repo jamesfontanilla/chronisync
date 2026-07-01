@@ -46,6 +46,18 @@ export interface MedicationAdherenceEvaluationOptions {
   evaluatedAt?: Date;
 }
 
+export interface MedicationAdherenceSummary {
+  medicationCount: number;
+  trackedMedicationCount: number;
+  observedMedicationCount: number;
+  expectedDoses: number;
+  takenDoses: number;
+  missedDoses: number;
+  adherenceRate: number | null;
+  latestTakenAt?: Date;
+  latestLoggedAt?: Date;
+}
+
 function isTrackedMedication(
   medication: Medication,
   evaluatedAt: Date
@@ -151,6 +163,81 @@ function buildAdherenceMetadata(
   return metadata;
 }
 
+export function summarizeMedicationAdherence(
+  options: MedicationAdherenceEvaluationOptions
+): MedicationAdherenceSummary {
+  const evaluatedAt = options.evaluatedAt ?? new Date();
+  const observations = options.observations ?? [];
+  const trackedMedications = options.medications.filter((medication) =>
+    isTrackedMedication(medication, evaluatedAt)
+  );
+  const observedMedicationIds = new Set<string>();
+
+  let expectedDoses = 0;
+  let takenDoses = 0;
+  let missedDoses = 0;
+  let latestTakenAt: Date | undefined;
+  let latestLoggedAt: Date | undefined;
+
+  for (const medication of trackedMedications) {
+    const observation = getObservationForMedication(medication, observations);
+
+    if (!observation) {
+      continue;
+    }
+
+    observedMedicationIds.add(medication.id);
+
+    const resolvedExpectedDoses =
+      observation.expectedDoses ??
+      (observation.takenDoses !== undefined &&
+      observation.missedDoses !== undefined
+        ? observation.takenDoses + observation.missedDoses
+        : undefined);
+
+    if (resolvedExpectedDoses !== undefined) {
+      expectedDoses += resolvedExpectedDoses;
+    }
+
+    if (observation.takenDoses !== undefined) {
+      takenDoses += observation.takenDoses;
+    }
+
+    if (observation.missedDoses !== undefined) {
+      missedDoses += observation.missedDoses;
+    }
+
+    if (
+      observation.lastTakenAt &&
+      (!latestTakenAt || observation.lastTakenAt > latestTakenAt)
+    ) {
+      latestTakenAt = observation.lastTakenAt;
+    }
+
+    if (
+      observation.lastLoggedAt &&
+      (!latestLoggedAt || observation.lastLoggedAt > latestLoggedAt)
+    ) {
+      latestLoggedAt = observation.lastLoggedAt;
+    }
+  }
+
+  const adherenceRate =
+    expectedDoses > 0 ? takenDoses / Math.max(expectedDoses, 1) : null;
+
+  return {
+    medicationCount: options.medications.length,
+    trackedMedicationCount: trackedMedications.length,
+    observedMedicationCount: observedMedicationIds.size,
+    expectedDoses,
+    takenDoses,
+    missedDoses,
+    adherenceRate,
+    ...(latestTakenAt ? { latestTakenAt } : {}),
+    ...(latestLoggedAt ? { latestLoggedAt } : {}),
+  };
+}
+
 function createMissingLoggingFinding(
   medication: Medication,
   physicianId: string | undefined,
@@ -161,6 +248,7 @@ function createMissingLoggingFinding(
   return {
     patientId: medication.patientId,
     ...(resolvedPhysicianId ? { physicianId: resolvedPhysicianId } : {}),
+    family: "guideline",
     ruleId: ADHERENCE_RULE_IDS.MISSING_LOGGING,
     title: "Medication Adherence Alert",
     message: `No adherence log data is available for ${medication.name}.`,
@@ -226,6 +314,7 @@ function createCountBasedFinding(
   return {
     patientId: medication.patientId,
     ...(resolvedPhysicianId ? { physicianId: resolvedPhysicianId } : {}),
+    family: "guideline",
     ruleId: isCritical
       ? ADHERENCE_RULE_IDS.CRITICAL
       : ADHERENCE_RULE_IDS.LOW,
@@ -279,6 +368,7 @@ function createRecencyFinding(
   return {
     patientId: medication.patientId,
     ...(resolvedPhysicianId ? { physicianId: resolvedPhysicianId } : {}),
+    family: "guideline",
     ruleId: isCritical
       ? ADHERENCE_RULE_IDS.CRITICAL
       : ADHERENCE_RULE_IDS.OVERDUE,

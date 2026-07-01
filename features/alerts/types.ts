@@ -9,6 +9,12 @@ import type { Alert, AlertLevel, AlertStatus } from "@/types/alert";
 
 export type AlertRecord = Alert;
 
+export type AlertFamily =
+  | "guideline"
+  | "interaction"
+  | "manual"
+  | "system";
+
 export type AlertSeverity = AlertLevel;
 
 export type AlertLifecycleStatus = AlertStatus;
@@ -33,6 +39,8 @@ export interface AlertViewModel {
   alert: AlertRecord;
   levelLabel: string;
   statusLabel: string;
+  family: AlertFamily;
+  familyLabel: string;
   timeLabel: string;
   summary: string;
   isOpen: boolean;
@@ -44,6 +52,10 @@ export interface AlertSummary {
   acknowledged: number;
   resolved: number;
   dismissed: number;
+  guideline: number;
+  interaction: number;
+  manual: number;
+  system: number;
 }
 
 export interface AlertActionState {

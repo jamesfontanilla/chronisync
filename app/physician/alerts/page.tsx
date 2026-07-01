@@ -116,6 +116,18 @@ export default function PhysicianAlertsPage() {
           <Badge variant="outline">
             {summary.dismissed} dismissed
           </Badge>
+          <Badge variant="secondary">
+            {summary.guideline} guideline alerts
+          </Badge>
+          <Badge variant="destructive">
+            {summary.interaction} interaction flags
+          </Badge>
+          <Badge variant="outline">
+            {summary.manual} manual alerts
+          </Badge>
+          <Badge variant="outline">
+            {summary.system} system alerts
+          </Badge>
         </CardContent>
       </Card>
 

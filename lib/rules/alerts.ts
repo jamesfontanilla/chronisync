@@ -7,6 +7,12 @@
 
 import type { Alert } from "@/types/alert";
 
+export type ClinicalAlertFamily =
+  | "guideline"
+  | "interaction"
+  | "manual"
+  | "system";
+
 export const RULE_ALERT_SOURCE = "rules_engine" as const;
 
 export interface ClinicalRuleFinding {
@@ -21,6 +27,9 @@ export interface ClinicalRuleFinding {
   recommendation: string;
   physicianId?: string;
   recordedAt?: Date;
+  family?: ClinicalAlertFamily;
+  windowDays?: number;
+  windowLabel?: string;
   metadata?: Record<string, unknown>;
 }
 
@@ -33,6 +42,57 @@ function createAlertId(): string {
   return typeof globalThis.crypto?.randomUUID === "function"
     ? globalThis.crypto.randomUUID()
     : `alt_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function isClinicalAlertFamily(value: unknown): value is ClinicalAlertFamily {
+  return (
+    value === "guideline" ||
+    value === "interaction" ||
+    value === "manual" ||
+    value === "system"
+  );
+}
+
+export function getClinicalAlertFamilyLabel(
+  family: ClinicalAlertFamily
+): string {
+  switch (family) {
+    case "interaction":
+      return "Interaction flag";
+    case "manual":
+      return "Manual alert";
+    case "system":
+      return "System alert";
+    case "guideline":
+    default:
+      return "Guideline alert";
+  }
+}
+
+export function isInteractionClinicalFinding(
+  finding: {
+    family?: ClinicalAlertFamily;
+    metric?: string;
+    ruleId?: string;
+    metadata?: Record<string, unknown>;
+  }
+): boolean {
+  if (finding.family === "interaction") {
+    return true;
+  }
+
+  const metadataFamily = finding.metadata?.["alertFamily"];
+  if (metadataFamily === "interaction") {
+    return true;
+  }
+
+  const ruleId = finding.ruleId?.toLowerCase() ?? "";
+  const metric = finding.metric?.toLowerCase() ?? "";
+
+  return (
+    ruleId.startsWith("medication_interaction") ||
+    metric === "medication_interaction"
+  );
 }
 
 export function formatClinicalNumber(
@@ -62,9 +122,18 @@ export function formatBloodPressureReading(
 export function createClinicalAlertInput(
   finding: ClinicalRuleFinding
 ): ClinicalAlertInput {
+  const family =
+    finding.family ?? (isClinicalAlertFamily(finding.metadata?.["alertFamily"])
+      ? finding.metadata?.["alertFamily"]
+      : "guideline");
   const metadata: Record<string, unknown> = {
     ...(finding.metadata ?? {}),
     ...(finding.recordedAt ? { recordedAt: finding.recordedAt } : {}),
+    alertFamily: family,
+    ...(finding.windowDays !== undefined
+      ? { windowDays: finding.windowDays }
+      : {}),
+    ...(finding.windowLabel ? { windowLabel: finding.windowLabel } : {}),
   };
 
   const alert: ClinicalAlertInput = {

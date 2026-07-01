@@ -115,7 +115,7 @@ export default function PhysicianDashboardPage() {
           <CardHeader className="gap-2">
             <CardTitle>Open alerts</CardTitle>
             <p className="m-0 text-sm leading-6 text-[color:var(--ui-muted)]">
-              {alertSummary.open} open, {alertSummary.acknowledged} acknowledged.
+              {alertSummary.open} open, {alertSummary.acknowledged} acknowledged, {alertSummary.guideline} guideline alerts, {alertSummary.interaction} interaction flags.
             </p>
           </CardHeader>
           <CardContent className="grid gap-4">
@@ -174,8 +174,7 @@ export default function PhysicianDashboardPage() {
               </Badge>
             </div>
             <p>
-              Review open alerts first, then documents, then the newest visit
-              summaries.
+              Review guideline alerts first, then interaction flags, then documents, then the newest visit summaries.
             </p>
             <p>
               Live data falls back to a seeded demo workspace if Firestore is
