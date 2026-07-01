@@ -29,7 +29,7 @@ import { storage } from "@/lib/firebase/client";
 export async function uploadFile(
   path: string,
   file: File,
-  metadata?: UploadMetadata
+  metadata?: UploadMetadata,
 ): Promise<string> {
   const storageRef = ref(storage, path);
 
@@ -45,9 +45,7 @@ export async function uploadFile(
 /**
  * Retrieve the download URL of a file.
  */
-export async function getFileUrl(
-  path: string
-): Promise<string> {
+export async function getFileUrl(path: string): Promise<string> {
   return getDownloadURL(ref(storage, path));
 }
 
@@ -58,9 +56,7 @@ export async function getFileUrl(
 /**
  * Retrieve metadata for a file.
  */
-export async function getFileMetadata(
-  path: string
-): Promise<FullMetadata> {
+export async function getFileMetadata(path: string): Promise<FullMetadata> {
   return getMetadata(ref(storage, path));
 }
 
@@ -71,9 +67,7 @@ export async function getFileMetadata(
 /**
  * Delete a file from Firebase Storage.
  */
-export async function deleteFile(
-  path: string
-): Promise<void> {
+export async function deleteFile(path: string): Promise<void> {
   await deleteObject(ref(storage, path));
 }
 
@@ -89,9 +83,22 @@ export async function deleteFile(
  */
 export function buildPatientDocumentPath(
   patientId: string,
-  fileName: string
+  fileName: string,
 ): string {
   return `patients/${patientId}/documents/${fileName}`;
+}
+
+/**
+ * Build a storage path for a patient's meal photo.
+ *
+ * Example:
+ * patients/{patientId}/food-photos/meal-photo.jpg
+ */
+export function buildPatientFoodPhotoPath(
+  patientId: string,
+  fileName: string,
+): string {
+  return `patients/${patientId}/food-photos/${fileName}`;
 }
 
 /**
@@ -102,7 +109,7 @@ export function buildPatientDocumentPath(
  */
 export function buildProfilePhotoPath(
   userId: string,
-  fileName: string
+  fileName: string,
 ): string {
   return `users/${userId}/profile/${fileName}`;
 }

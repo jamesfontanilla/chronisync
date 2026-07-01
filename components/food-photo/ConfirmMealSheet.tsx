@@ -6,6 +6,13 @@ import { Check, RefreshCcw, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Sheet,
@@ -19,10 +26,13 @@ import { Separator } from "@/components/ui/separator";
 import { PhotoPreview } from "./PhotoPreview";
 import type {
   FoodPhotoRecord,
+  FoodPhotoMealType,
   FoodPhotoStatus,
 } from "@/features/food-photo/types";
+import { humanize } from "@/lib/utils";
 
 export interface ConfirmMealPayload {
+  mealType: FoodPhotoMealType;
   mealLabel: string;
   portionLabel?: string;
   notes?: string;
@@ -41,12 +51,14 @@ export interface ConfirmMealSheetProps {
 }
 
 function buildPayload(
+  mealType: FoodPhotoMealType,
   mealLabel: string,
   portionLabel: string,
   notes: string,
-  status: FoodPhotoStatus
+  status: FoodPhotoStatus,
 ): ConfirmMealPayload {
   return {
+    mealType,
     mealLabel: mealLabel.trim(),
     ...(portionLabel.trim() ? { portionLabel: portionLabel.trim() } : {}),
     ...(notes.trim() ? { notes: notes.trim() } : {}),
@@ -65,6 +77,7 @@ export function ConfirmMealSheet({
   onRetake,
 }: ConfirmMealSheetProps) {
   const [mealLabel, setMealLabel] = useState(record.mealLabel);
+  const [mealType, setMealType] = useState(record.mealType);
   const [portionLabel, setPortionLabel] = useState(record.portionLabel ?? "");
   const [notes, setNotes] = useState(record.notes ?? "");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -78,6 +91,7 @@ export function ConfirmMealSheet({
     }
 
     setMealLabel(record.mealLabel);
+    setMealType(record.mealType);
     setPortionLabel(record.portionLabel ?? "");
     setNotes(record.notes ?? "");
     setErrorMessage(null);
@@ -86,16 +100,17 @@ export function ConfirmMealSheet({
   const previewRecord = useMemo(
     () => ({
       ...record,
+      mealType,
       mealLabel,
       ...(portionLabel.trim() ? { portionLabel } : {}),
       ...(notes.trim() ? { notes } : {}),
     }),
-    [record, mealLabel, portionLabel, notes]
+    [record, mealLabel, mealType, portionLabel, notes],
   );
 
   const submit = async (
     callback?: (payload: ConfirmMealPayload) => void | Promise<void>,
-    status: FoodPhotoStatus = "confirmed"
+    status: FoodPhotoStatus = "confirmed",
   ) => {
     if (!callback) {
       onOpenChange(false);
@@ -106,13 +121,15 @@ export function ConfirmMealSheet({
     setErrorMessage(null);
 
     try {
-      await callback(buildPayload(mealLabel, portionLabel, notes, status));
+      await callback(
+        buildPayload(mealType, mealLabel, portionLabel, notes, status),
+      );
       onOpenChange(false);
     } catch (error) {
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : "We could not save this meal yet."
+          : "We could not save this meal yet.",
       );
     } finally {
       setIsWorking(false);
@@ -130,7 +147,7 @@ export function ConfirmMealSheet({
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : "We could not reopen the camera."
+          : "We could not reopen the camera.",
       );
     } finally {
       setIsWorking(false);
@@ -172,6 +189,35 @@ export function ConfirmMealSheet({
           <Separator />
 
           <div className="grid gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="meal-type">Meal type</Label>
+              <Select
+                value={mealType}
+                onValueChange={(value) =>
+                  setMealType(value as FoodPhotoMealType)
+                }
+                disabled={busy}
+              >
+                <SelectTrigger id="meal-type">
+                  <SelectValue placeholder="Select a meal type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {[
+                    "breakfast",
+                    "lunch",
+                    "dinner",
+                    "snack",
+                    "drink",
+                    "other",
+                  ].map((value) => (
+                    <SelectItem key={value} value={value}>
+                      {humanize(value)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="grid gap-2">
               <Label htmlFor="meal-label">Meal label</Label>
               <Input
