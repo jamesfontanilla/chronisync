@@ -2,13 +2,13 @@
   "name": "chronisync",
   "version": "0.1.0",
   "private": true,
-  "description": "A two-sided chronic disease management platform for patients and physicians with explainable AI-assisted workflows.",
-  "author": "Your Team Name",
+  "description": "A web-based chronic disease management platform for patients and physicians with explainable AI-assisted workflows.",
+  "author": "ChroniSync Team",
   "license": "MIT",
   "homepage": ".",
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-org/chronic-disease-management.git"
+    "url": "https://github.com/jamesfontanilla/chronisync.git"
   },
   "keywords": [
     "healthcare",
@@ -36,6 +36,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check": "pnpm lint && pnpm typecheck",
+    "test:e2e": "playwright test",
     "firebase:emulators": "firebase emulators:start",
     "firebase:deploy": "firebase deploy",
     "seed": "tsx scripts/seed.ts",
@@ -76,6 +77,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
+    "@playwright/test": "^1.61.1",
     "@tailwindcss/postcss": "^4.1.12",
     "@types/node": "^24.3.0",
     "@types/react": "^19.1.12",

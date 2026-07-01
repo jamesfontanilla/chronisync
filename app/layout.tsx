@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/providers/ThemeProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(APP_CONFIG.website),
   title: {
     default: APP_CONFIG.name,
     template: `%s | ${APP_CONFIG.name}`,

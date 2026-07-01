@@ -11,21 +11,14 @@ export const APP_CONFIG = {
   /* ------------------------------------------------------------------------ */
 
   name: "ChroniSync",
-
   shortName: "ChroniSync",
-
   description:
-    "A two-sided chronic disease management platform for patients and physicians with explainable AI-assisted workflows.",
-
+    "A web-based chronic disease management platform for patients and physicians with explainable AI-assisted workflows.",
   version: "0.1.0",
-
-  author: "Your Team Name",
-
-  repository:
-    "https://github.com/jamesfontanilla/chronisync",
-
-  website: "",
-
+  author: "ChroniSync Team",
+  repository: "https://github.com/jamesfontanilla/chronisync.git",
+  website:
+    process.env["NEXT_PUBLIC_APP_URL"] ?? "http://localhost:3000",
   supportEmail: "support@chronisync.app",
 
   /* ------------------------------------------------------------------------ */
@@ -33,19 +26,15 @@ export const APP_CONFIG = {
   /* ------------------------------------------------------------------------ */
 
   locale: "en-PH",
-
   timeZone: "Asia/Manila",
-
   dateFormat: "MMM dd, yyyy",
-
-  dateTimeFormat: "MMM dd, yyyy • hh:mm a",
+  dateTimeFormat: "MMM dd, yyyy - hh:mm a",
 
   /* ------------------------------------------------------------------------ */
   /* Pagination                                                               */
   /* ------------------------------------------------------------------------ */
 
   defaultPageSize: 10,
-
   maxPageSize: 100,
 
   /* ------------------------------------------------------------------------ */
@@ -53,7 +42,6 @@ export const APP_CONFIG = {
   /* ------------------------------------------------------------------------ */
 
   maxUploadSizeMB: 10,
-
   allowedDocumentTypes: [
     "application/pdf",
     "image/jpeg",
@@ -68,26 +56,20 @@ export const APP_CONFIG = {
   dashboardRefreshInterval: 60_000,
 
   /* ------------------------------------------------------------------------ */
-  /* AI                                                                        */
+  /* AI                                                                       */
   /* ------------------------------------------------------------------------ */
 
   enableAI: true,
-
   enableDocumentExtraction: true,
-
   enableVisitSummaries: true,
-
   enableClinicalRecommendations: false,
 
   /* ------------------------------------------------------------------------ */
-  /* Development                                                               */
+  /* Development                                                              */
   /* ------------------------------------------------------------------------ */
 
-  isDevelopment:
-    process.env.NODE_ENV === "development",
-
-  isProduction:
-    process.env.NODE_ENV === "production",
+  isDevelopment: process.env.NODE_ENV === "development",
+  isProduction: process.env.NODE_ENV === "production",
 } as const;
 
 export type AppConfig = typeof APP_CONFIG;

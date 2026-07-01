@@ -141,7 +141,7 @@ export const MAX_PAGE_SIZE = 100;
 
 export const DATE_FORMAT = "MMM dd, yyyy";
 
-export const DATE_TIME_FORMAT = "MMM dd, yyyy • hh:mm a";
+export const DATE_TIME_FORMAT = "MMM dd, yyyy - hh:mm a";
 
 /* -------------------------------------------------------------------------- */
 /*                              Local Storage                                 */

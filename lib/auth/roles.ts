@@ -51,6 +51,13 @@ function hasBrowserStorage(): boolean {
   );
 }
 
+function isSecureContext(): boolean {
+  return (
+    typeof window !== "undefined" &&
+    window.location.protocol === "https:"
+  );
+}
+
 function readCookieValue(name: string): string | null {
   if (typeof document === "undefined") {
     return null;
@@ -72,21 +79,18 @@ function writeCookieValue(name: string, value: string): void {
     return;
   }
 
-  const secureFlag =
-    typeof window !== "undefined" &&
-    window.location.protocol === "https:"
-      ? "; Secure"
-      : "";
-
-  document.cookie = [
+  const cookieParts = [
     `${name}=${encodeURIComponent(value)}`,
     "Path=/",
     `Max-Age=${ROLE_COOKIE_MAX_AGE_SECONDS}`,
     "SameSite=Lax",
-    secureFlag,
-  ]
-    .filter(Boolean)
-    .join("; ");
+  ];
+
+  if (isSecureContext()) {
+    cookieParts.push("Secure");
+  }
+
+  document.cookie = cookieParts.join("; ");
 }
 
 function clearCookieValue(name: string): void {
@@ -94,21 +98,18 @@ function clearCookieValue(name: string): void {
     return;
   }
 
-  const secureFlag =
-    typeof window !== "undefined" &&
-    window.location.protocol === "https:"
-      ? "; Secure"
-      : "";
-
-  document.cookie = [
+  const cookieParts = [
     `${name}=`,
     "Path=/",
     "Max-Age=0",
     "SameSite=Lax",
-    secureFlag,
-  ]
-    .filter(Boolean)
-    .join("; ");
+  ];
+
+  if (isSecureContext()) {
+    cookieParts.push("Secure");
+  }
+
+  document.cookie = cookieParts.join("; ");
 }
 
 export function isAuthRole(role: string | null | undefined): role is AuthRole {

@@ -26,6 +26,8 @@ out/
 
 dist/
 build/
+playwright-report/
+test-results/
 
 # -----------------------------------------------------------------------------
 # TypeScript

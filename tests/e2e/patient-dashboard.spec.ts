@@ -1,18 +1,22 @@
-import assert from "node:assert/strict";
-import test from "node:test";
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
+import { expect, test } from "@playwright/test";
 
-test("patient dashboard keeps the seeded summary layout", async () => {
-  const source = await readFile(
-    join(process.cwd(), "app/patient/dashboard/page.tsx"),
-    "utf8"
-  );
+test("patient dashboard keeps the seeded summary layout", async ({ page }) => {
+  await page.goto("/patient/dashboard");
 
-  assert.match(source, /Patient workspace/);
-  assert.match(source, /Review the latest care signals/);
-  assert.match(source, /defaultDashboardSnapshot/);
-  assert.match(source, /MetricCard/);
-  assert.match(source, /TrendCard/);
-  assert.match(source, /Workspace summary/);
+  await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
+  await expect(
+    page.getByText(
+      "Review the latest care signals, trends, and unresolved items from one calm landing page."
+    )
+  ).toBeVisible();
+
+  await expect(page.getByText("Open records")).toBeVisible();
+  await expect(page.getByText("Unread alerts")).toBeVisible();
+  await expect(page.getByText("Stable vitals")).toBeVisible();
+  await expect(page.getByText("Pending uploads")).toBeVisible();
+
+  await expect(page.getByRole("heading", { name: "Workspace summary" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Blood pressure" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Glucose" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Generated at" })).toBeVisible();
 });

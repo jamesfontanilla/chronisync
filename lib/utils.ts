@@ -31,7 +31,7 @@ export function formatDate(
  * Format date and time.
  */
 export function formatDateTime(date: Date | string | number) {
-  return format(new Date(date), "MMM dd, yyyy • hh:mm a");
+  return format(new Date(date), "MMM dd, yyyy - hh:mm a");
 }
 
 /**
@@ -132,7 +132,7 @@ export function isEmpty(value: unknown): boolean {
 
 /**
  * Generate a random identifier.
- * Suitable for UI keys only—not database IDs.
+ * Suitable for UI keys only, not database IDs.
  */
 export function generateId(length = 12): string {
   return crypto.randomUUID().replace(/-/g, "").slice(0, length);

@@ -1,18 +1,27 @@
-import assert from "node:assert/strict";
-import test from "node:test";
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
+import { expect, test } from "@playwright/test";
 
-test("physician dashboard keeps the review queue layout", async () => {
-  const source = await readFile(
-    join(process.cwd(), "app/physician/dashboard/page.tsx"),
-    "utf8"
+test("physician dashboard keeps the review queue layout", async ({ page }) => {
+  await page.goto("/physician/dashboard");
+
+  await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
+  await expect(page.getByText("A compact view of panel health, open alerts, and the latest care summaries.")).toBeVisible();
+
+  await expect(page.getByRole("link", { name: "Patients" })).toHaveAttribute(
+    "href",
+    "/physician/patients"
+  );
+  await expect(page.getByRole("link", { name: "Alerts" })).toHaveAttribute(
+    "href",
+    "/physician/alerts"
   );
 
-  assert.match(source, /Physician workspace/);
-  assert.match(source, /Open alerts/);
-  assert.match(source, /Patient watchlist/);
-  assert.match(source, /Latest summaries/);
-  assert.match(source, /usePhysicianWorkspaceQuery/);
-  assert.match(source, /SummaryPreview/);
+  await expect(page.getByRole("heading", { name: "Patient watchlist" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Open alerts" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Latest summaries" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Panel snapshot" })).toBeVisible();
+
+  await expect(page.getByRole("heading", { name: "Anna Cruz", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Jon Reyes", exact: true })).toBeVisible();
+  await expect(page.getByText("Medication Adherence Alert")).toBeVisible();
+  await expect(page.getByText("High Blood Pressure Alert")).toBeVisible();
 });
