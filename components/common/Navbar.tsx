@@ -5,9 +5,11 @@ import { useEffect, useState, type ReactNode } from "react";
 import { useTheme } from "next-themes";
 import {
   ArrowRight,
+  LogIn,
   MoonStar,
   Sparkles,
   SunMedium,
+  UserPlus,
 } from "lucide-react";
 
 import { APP_CONFIG } from "@/config/app";
@@ -77,15 +79,26 @@ export function Navbar({
 
       <div className="navbar__actions">
         {actions ?? (
-          <>
-            <Link href={ROUTES.AUTH.LOGIN} className="navbar__button navbar__button--ghost">
-              Sign in
-            </Link>
-            <Link href={ROUTES.AUTH.REGISTER} className="navbar__button navbar__button--solid">
-              Create account
-              <ArrowRight size={16} />
-            </Link>
-          </>
+          <div className="navbar__auth" aria-label="Authentication actions">
+            <span className="navbar__auth-badge">Access</span>
+            <div className="navbar__auth-buttons">
+              <Link
+                href={ROUTES.AUTH.LOGIN}
+                className="navbar__button navbar__button--ghost navbar__button--auth"
+              >
+                <LogIn size={16} aria-hidden="true" />
+                <span>Sign in</span>
+              </Link>
+              <Link
+                href={ROUTES.AUTH.REGISTER}
+                className="navbar__button navbar__button--solid navbar__button--auth"
+              >
+                <UserPlus size={16} aria-hidden="true" />
+                <span>Create account</span>
+                <ArrowRight size={16} aria-hidden="true" />
+              </Link>
+            </div>
+          </div>
         )}
 
         <button
@@ -186,6 +199,58 @@ export function Navbar({
           display: inline-flex;
           align-items: center;
           gap: 0.65rem;
+          justify-content: flex-end;
+          flex-wrap: wrap;
+        }
+
+        .navbar__auth {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.75rem;
+          padding: 0.4rem 0.45rem 0.4rem 0.55rem;
+          border-radius: 999px;
+          border: 1px solid rgba(255, 255, 255, 0.5);
+          background: linear-gradient(
+            135deg,
+            rgba(255, 255, 255, 0.18),
+            rgba(255, 255, 255, 0.08)
+          );
+          box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.32),
+            0 10px 24px rgba(15, 38, 43, 0.06);
+          backdrop-filter: blur(16px);
+        }
+
+        .navbar__auth-badge {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 2.5rem;
+          padding: 0 0.75rem;
+          border-radius: 999px;
+          color: var(--ui-accent);
+          background: rgba(255, 255, 255, 0.1);
+          font-size: 0.72rem;
+          font-weight: 700;
+          letter-spacing: 0.24em;
+          text-transform: uppercase;
+          white-space: nowrap;
+        }
+
+        .navbar__auth-buttons {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
+        .navbar__button--auth {
+          min-height: 2.75rem;
+          padding: 0 0.95rem;
+          font-size: 0.95rem;
+        }
+
+        .navbar__button--auth svg {
+          flex-shrink: 0;
         }
 
         .navbar__button,
@@ -210,9 +275,9 @@ export function Navbar({
         }
 
         .navbar__button--ghost {
-          color: var(--ui-accent);
-          border-color: var(--ui-border);
-          background: rgba(255, 255, 255, 0.08);
+          color: var(--ui-text);
+          border-color: rgba(15, 76, 89, 0.18);
+          background: rgba(255, 255, 255, 0.14);
         }
 
         .navbar__button--solid {
@@ -222,7 +287,9 @@ export function Navbar({
             var(--ui-accent),
             var(--ui-accent-strong)
           );
-          box-shadow: 0 16px 30px rgba(11, 76, 89, 0.2);
+          box-shadow:
+            0 16px 30px rgba(11, 76, 89, 0.2),
+            inset 0 1px 0 rgba(255, 255, 255, 0.2);
         }
 
         .navbar__theme {
@@ -240,6 +307,16 @@ export function Navbar({
             width: min(1240px, calc(100% - 1rem));
           }
 
+          .navbar__actions {
+            width: 100%;
+            justify-content: flex-start;
+          }
+
+          .navbar__auth {
+            width: 100%;
+            justify-content: space-between;
+          }
+
           .navbar__links,
           .navbar__actions {
             justify-content: flex-start;
@@ -249,6 +326,35 @@ export function Navbar({
         @media (max-width: 640px) {
           .navbar__links {
             display: none;
+          }
+
+          .navbar__actions {
+            gap: 0.55rem;
+          }
+
+          .navbar__auth {
+            width: 100%;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0.55rem;
+            padding: 0.55rem;
+          }
+
+          .navbar__auth-badge {
+            width: 100%;
+            min-height: 2.25rem;
+            justify-content: center;
+          }
+
+          .navbar__auth-buttons {
+            width: 100%;
+            flex-direction: column;
+            align-items: stretch;
+          }
+
+          .navbar__button--auth {
+            width: 100%;
+            justify-content: space-between;
           }
         }
       `}</style>
