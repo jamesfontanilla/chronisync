@@ -79,6 +79,13 @@ const portalSections = [
   },
 ] as const;
 
+const homeNavLinks = [
+  { label: "Overview", href: "#overview" },
+  { label: "Portal map", href: "#portal-map" },
+  { label: "Roles", href: "#roles" },
+  { label: "Security", href: "#security" },
+] as const;
+
 const featureCards = [
   {
     title: "Glassmorphism with restraint",
@@ -103,7 +110,7 @@ const featureCards = [
 export default function HomePage() {
   return (
     <main className="home-page">
-      <Navbar />
+      <Navbar links={homeNavLinks} />
 
       <div className="home-page__content">
         <section className="home-hero" id="overview">

@@ -33,19 +33,37 @@ const defaultLinks: readonly NavbarLink[] = [
     label: "Home",
     href: ROUTES.HOME,
   },
-  {
-    label: "Sign in",
-    href: ROUTES.AUTH.LOGIN,
-  },
-  {
-    label: "Create account",
-    href: ROUTES.AUTH.REGISTER,
-  },
 ];
 
-function isActiveNavbarLink(pathname: string, href: string): boolean {
+function normalizeHash(href: string): string {
+  if (!href.includes("#")) {
+    return "";
+  }
+
+  return href.slice(href.indexOf("#"));
+}
+
+function isActiveNavbarLink(
+  pathname: string,
+  currentHash: string,
+  href: string
+): boolean {
+  const hash = normalizeHash(href);
+
+  if (hash) {
+    if (pathname !== ROUTES.HOME) {
+      return false;
+    }
+
+    if (!currentHash) {
+      return hash === "#overview";
+    }
+
+    return currentHash === hash;
+  }
+
   if (href === ROUTES.HOME) {
-    return pathname === ROUTES.HOME;
+    return pathname === ROUTES.HOME && !currentHash;
   }
 
   return pathname === href || pathname.startsWith(`${href}/`);
@@ -59,10 +77,25 @@ export function Navbar({
   const pathname = usePathname();
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [currentHash, setCurrentHash] = useState("");
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    setCurrentHash(window.location.hash);
+
+    const updateHash = () => {
+      setCurrentHash(window.location.hash);
+    };
+
+    window.addEventListener("hashchange", updateHash);
+
+    return () => {
+      window.removeEventListener("hashchange", updateHash);
+    };
+  }, [pathname]);
 
   const isDark = mounted && resolvedTheme === "dark";
 
@@ -82,7 +115,7 @@ export function Navbar({
       <nav className="navbar__links" aria-label="Primary">
         <div className="navbar__links-rail">
           {links.map((link) => {
-            const active = isActiveNavbarLink(pathname, link.href);
+            const active = isActiveNavbarLink(pathname, currentHash, link.href);
 
             return (
               <Link
