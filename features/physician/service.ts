@@ -50,9 +50,12 @@ export interface PhysicianWorkspaceSnapshot {
 }
 
 const DEMO_PHYSICIAN_ID = "demo-physician";
+const DEMO_REFERENCE_TIMESTAMP = Date.parse("2026-07-01T00:08:00.000Z");
 
 function createTimestamp(daysAgo = 0): Date {
-  return new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
+  return new Date(
+    DEMO_REFERENCE_TIMESTAMP - daysAgo * 24 * 60 * 60 * 1000
+  );
 }
 
 function createDemoPatients(
@@ -298,7 +301,7 @@ function createDemoWorkspaceSnapshot(
 
   return {
     physicianId,
-    generatedAt: new Date(),
+    generatedAt: createTimestamp(),
     metrics: buildPhysicianMetrics({
       patients,
       alerts,
@@ -496,7 +499,7 @@ async function buildLiveWorkspaceSnapshot(
 
   return {
     physicianId,
-    generatedAt: new Date(),
+    generatedAt: createTimestamp(),
     metrics,
     trends: createDemoWorkspaceSnapshot(physicianId).trends,
     patientCards,
