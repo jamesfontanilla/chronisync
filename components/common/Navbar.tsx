@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
+import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import {
   ArrowRight,
@@ -42,11 +43,20 @@ const defaultLinks: readonly NavbarLink[] = [
   },
 ];
 
+function isActiveNavbarLink(pathname: string, href: string): boolean {
+  if (href === ROUTES.HOME) {
+    return pathname === ROUTES.HOME;
+  }
+
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
 export function Navbar({
   className,
   links = defaultLinks,
   actions,
 }: NavbarProps) {
+  const pathname = usePathname();
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -70,17 +80,31 @@ export function Navbar({
       </Link>
 
       <nav className="navbar__links" aria-label="Primary">
-        {links.map((link) => (
-          <Link key={link.href} href={link.href} className="navbar__link">
-            {link.label}
-          </Link>
-        ))}
+        <div className="navbar__links-rail">
+          {links.map((link) => {
+            const active = isActiveNavbarLink(pathname, link.href);
+
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                aria-current={active ? "page" : undefined}
+                className={cn(
+                  "navbar__link",
+                  active && "navbar__link--active"
+                )}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
+        </div>
       </nav>
 
       <div className="navbar__actions">
         {actions ?? (
           <div className="navbar__auth" aria-label="Authentication actions">
-            <span className="navbar__auth-badge">Access</span>
+            <span className="navbar__auth-label">Guest access</span>
             <div className="navbar__auth-buttons">
               <Link
                 href={ROUTES.AUTH.LOGIN}
@@ -122,10 +146,10 @@ export function Navbar({
           grid-template-columns: auto minmax(0, 1fr) auto;
           align-items: center;
           gap: 1rem;
-          width: min(1240px, calc(100% - 2rem));
+          width: min(1280px, calc(100% - 1.5rem));
           margin: 1rem auto 0;
-          padding: 1rem 1.15rem;
-          border-radius: 999px;
+          padding: 0.95rem 1rem;
+          border-radius: var(--ui-radius-xl);
           border: 1px solid var(--ui-border);
           background: var(--ui-surface);
           box-shadow: var(--ui-shadow);
@@ -173,15 +197,39 @@ export function Navbar({
           display: flex;
           align-items: center;
           justify-content: center;
+          min-width: 0;
+        }
+
+        .navbar__links-rail {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
           gap: 0.35rem;
           flex-wrap: wrap;
+          padding: 0.3rem;
+          border-radius: 999px;
+          border: 1px solid rgba(255, 255, 255, 0.32);
+          background: linear-gradient(
+            135deg,
+            rgba(255, 255, 255, 0.32),
+            rgba(255, 255, 255, 0.14)
+          );
+          box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.28),
+            0 8px 18px rgba(15, 38, 43, 0.04);
         }
 
         .navbar__link {
-          padding: 0.7rem 1rem;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 2.9rem;
+          padding: 0.66rem 0.95rem;
           border-radius: 999px;
           color: var(--ui-text);
           font-weight: 600;
+          font-size: 0.94rem;
+          letter-spacing: -0.01em;
           border: 1px solid transparent;
           transition:
             color 180ms ease,
@@ -191,14 +239,27 @@ export function Navbar({
 
         .navbar__link:hover {
           color: var(--ui-text);
-          background: rgba(255, 255, 255, 0.08);
-          border-color: var(--ui-border);
+          background: rgba(255, 255, 255, 0.2);
+          border-color: rgba(8, 35, 43, 0.08);
+        }
+
+        .navbar__link--active {
+          color: var(--ui-accent);
+          background: linear-gradient(
+            135deg,
+            rgba(25, 163, 154, 0.24),
+            rgba(25, 163, 154, 0.12)
+          );
+          border-color: rgba(11, 101, 116, 0.18);
+          box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.28),
+            0 10px 20px rgba(11, 101, 116, 0.1);
         }
 
         .navbar__actions {
           display: inline-flex;
           align-items: center;
-          gap: 0.65rem;
+          gap: 0.55rem;
           justify-content: flex-end;
           flex-wrap: wrap;
         }
@@ -206,33 +267,29 @@ export function Navbar({
         .navbar__auth {
           display: inline-flex;
           align-items: center;
-          gap: 0.75rem;
-          padding: 0.4rem 0.45rem 0.4rem 0.55rem;
+          gap: 0.65rem;
+          padding: 0.38rem 0.45rem 0.38rem 0.55rem;
           border-radius: 999px;
-          border: 1px solid rgba(255, 255, 255, 0.5);
-          background: linear-gradient(
-            135deg,
-            rgba(255, 255, 255, 0.18),
-            rgba(255, 255, 255, 0.08)
-          );
+          border: 1px solid rgba(255, 255, 255, 0.46);
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.08));
           box-shadow:
             inset 0 1px 0 rgba(255, 255, 255, 0.32),
             0 10px 24px rgba(15, 38, 43, 0.06);
           backdrop-filter: blur(16px);
         }
 
-        .navbar__auth-badge {
+        .navbar__auth-label {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          min-height: 2.5rem;
-          padding: 0 0.75rem;
+          min-height: 2.45rem;
+          padding: 0 0.8rem;
           border-radius: 999px;
-          color: var(--ui-accent);
-          background: rgba(255, 255, 255, 0.1);
-          font-size: 0.72rem;
+          color: var(--ui-muted);
+          background: rgba(255, 255, 255, 0.18);
+          font-size: 0.66rem;
           font-weight: 700;
-          letter-spacing: 0.24em;
+          letter-spacing: 0.28em;
           text-transform: uppercase;
           white-space: nowrap;
         }
@@ -240,13 +297,13 @@ export function Navbar({
         .navbar__auth-buttons {
           display: inline-flex;
           align-items: center;
-          gap: 0.5rem;
+          gap: 0.45rem;
         }
 
         .navbar__button--auth {
-          min-height: 2.75rem;
+          min-height: 2.7rem;
           padding: 0 0.95rem;
-          font-size: 0.95rem;
+          font-size: 0.92rem;
         }
 
         .navbar__button--auth svg {
@@ -277,7 +334,7 @@ export function Navbar({
         .navbar__button--ghost {
           color: var(--ui-text);
           border-color: rgba(15, 76, 89, 0.18);
-          background: rgba(255, 255, 255, 0.14);
+          background: rgba(255, 255, 255, 0.18);
         }
 
         .navbar__button--solid {
@@ -304,7 +361,15 @@ export function Navbar({
           .navbar {
             grid-template-columns: 1fr;
             border-radius: var(--ui-radius-xl);
-            width: min(1240px, calc(100% - 1rem));
+            width: min(1280px, calc(100% - 1rem));
+          }
+
+          .navbar__links {
+            width: 100%;
+          }
+
+          .navbar__links-rail {
+            width: 100%;
           }
 
           .navbar__actions {
@@ -316,15 +381,17 @@ export function Navbar({
             width: 100%;
             justify-content: space-between;
           }
-
-          .navbar__links,
-          .navbar__actions {
-            justify-content: flex-start;
-          }
         }
 
         @media (max-width: 640px) {
-          .navbar__links {
+          .navbar__links-rail {
+            gap: 0.25rem;
+            overflow-x: auto;
+            scrollbar-width: none;
+            justify-content: flex-start;
+          }
+
+          .navbar__links-rail::-webkit-scrollbar {
             display: none;
           }
 
@@ -340,7 +407,7 @@ export function Navbar({
             padding: 0.55rem;
           }
 
-          .navbar__auth-badge {
+          .navbar__auth-label {
             width: 100%;
             min-height: 2.25rem;
             justify-content: center;
