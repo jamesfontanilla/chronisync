@@ -7,6 +7,14 @@
 
 import { AI } from "@/config/constants";
 import {
+  foodPhotoAnalysisDraftSchema,
+  foodPhotoAnalysisInputSchema,
+  foodPhotoAnalysisResponseSchema,
+  type FoodPhotoAnalysisDraft,
+  type FoodPhotoAnalysisInput,
+  type FoodPhotoAnalysisResponse,
+} from "@/lib/ai/food-photo";
+import {
   documentExtractionDraftSchema,
   documentExtractionInputSchema,
   documentExtractionResponseSchema,
@@ -25,6 +33,9 @@ import {
 import { z } from "zod";
 
 export {
+  foodPhotoAnalysisDraftSchema,
+  foodPhotoAnalysisInputSchema,
+  foodPhotoAnalysisResponseSchema,
   documentExtractionDraftSchema,
   documentExtractionInputSchema,
   documentExtractionResponseSchema,
@@ -34,6 +45,9 @@ export {
 };
 
 export type {
+  FoodPhotoAnalysisDraft,
+  FoodPhotoAnalysisInput,
+  FoodPhotoAnalysisResponse,
   DocumentExtractionDraft,
   DocumentExtractionInput,
   DocumentExtractionResponse,
@@ -43,6 +57,7 @@ export type {
 };
 
 export const aiWorkflowSchema = z.enum([
+  "food_photo_analysis",
   "document_extraction",
   "visit_summary",
 ]);
@@ -62,17 +77,11 @@ export const aiConfidenceSchema = z.number().min(0).max(1);
 
 export type AiConfidence = z.infer<typeof aiConfidenceSchema>;
 
-export const aiConfidenceLevelSchema = z.enum([
-  "low",
-  "medium",
-  "high",
-]);
+export const aiConfidenceLevelSchema = z.enum(["low", "medium", "high"]);
 
 export type AiConfidenceLevel = z.infer<typeof aiConfidenceLevelSchema>;
 
-export function getAiConfidenceLevel(
-  confidence: number
-): AiConfidenceLevel {
+export function getAiConfidenceLevel(confidence: number): AiConfidenceLevel {
   if (confidence >= AI.MIN_CONFIDENCE_SCORE) {
     return "high";
   }
@@ -84,9 +93,6 @@ export function getAiConfidenceLevel(
   return "low";
 }
 
-export function formatAiConfidence(
-  confidence: number
-): string {
+export function formatAiConfidence(confidence: number): string {
   return `${Math.round(confidence * 100)}%`;
 }
-

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { Camera, CircleCheckBig, Sparkles } from "lucide-react";
+import { Camera, CircleCheckBig, Loader2, Sparkles } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,15 @@ import {
   buildFoodPhotoRecord,
   type FoodPhotoMealType,
 } from "@/features/food-photo/service";
-import { buildPatientFoodPhotoPath, uploadFile } from "@/lib/firebase/storage";
+import {
+  foodPhotoAnalysisDraftSchema,
+  type FoodPhotoAnalysisDraft,
+} from "@/features/ai/validation";
+import {
+  buildPatientFoodPhotoPath,
+  deleteFile,
+  uploadFile,
+} from "@/lib/firebase/storage";
 import { humanize } from "@/lib/utils";
 
 interface MealPhotoCaptureCardProps {
@@ -43,17 +51,60 @@ function deriveMealLabel(file: File): string {
   return cleaned ? humanize(cleaned) : "Meal photo";
 }
 
+async function analyzeMealPhoto(
+  imageUrl: string,
+  patientId: string,
+  fileName: string,
+  mimeType: string,
+  mealLabelHint: string,
+) {
+  const response = await fetch("/api/gemini", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      workflow: "food_photo_analysis",
+      input: {
+        patientId,
+        fileName,
+        mimeType,
+        imageUrl,
+        mealLabelHint,
+      },
+    }),
+  });
+
+  if (!response.ok) {
+    const body = (await response.json().catch(() => null)) as {
+      error?: string;
+    } | null;
+
+    throw new Error(body?.error ?? "We could not analyze the meal photo yet.");
+  }
+
+  const body = (await response.json().catch(() => null)) as {
+    draft?: unknown;
+  } | null;
+
+  return foodPhotoAnalysisDraftSchema.parse(body?.draft);
+}
+
 export function MealPhotoCaptureCard({
   patientId = "demo-patient",
 }: MealPhotoCaptureCardProps) {
   const previewUrlRef = useRef<string | null>(null);
+  const uploadedImagePathRef = useRef<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | undefined>();
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
+  const [analysis, setAnalysis] = useState<FoodPhotoAnalysisDraft | null>(null);
   const [open, setOpen] = useState(false);
   const [mealType, setMealType] = useState<FoodPhotoMealType>("other");
   const [mealLabel, setMealLabel] = useState("Meal photo");
   const [portionLabel, setPortionLabel] = useState("");
   const [notes, setNotes] = useState("");
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -71,18 +122,63 @@ export function MealPhotoCaptureCard({
       return null;
     }
 
+    const sourceRecord = analysis
+      ? {
+          mealType: analysis.mealType,
+          mealLabel: analysis.mealLabel,
+          ...(analysis.portionLabel
+            ? { portionLabel: analysis.portionLabel }
+            : {}),
+          confidence: analysis.confidence,
+          estimatedCalories: analysis.estimatedCalories,
+          estimatedCarbsG: analysis.estimatedCarbsG,
+          estimatedProteinG: analysis.estimatedProteinG,
+          estimatedFatG: analysis.estimatedFatG,
+          ...(analysis.notes ? { notes: analysis.notes } : {}),
+          ...(analysis.suggestedEdits.length
+            ? { suggestedEdits: analysis.suggestedEdits }
+            : {}),
+        }
+      : {
+          mealType,
+          mealLabel,
+          ...(portionLabel.trim() ? { portionLabel: portionLabel.trim() } : {}),
+        };
+
     return buildFoodPhotoRecord({
       patientId,
-      mealType,
-      mealLabel,
+      mealType: sourceRecord.mealType,
+      mealLabel: sourceRecord.mealLabel,
       imageName: selectedFile.name || "meal-photo.jpg",
       imageUrl: previewUrl,
       source: "photo",
       status: "needs_review",
-      ...(portionLabel.trim() ? { portionLabel: portionLabel.trim() } : {}),
-      ...(notes.trim() ? { notes: notes.trim() } : {}),
+      ...(sourceRecord.portionLabel
+        ? { portionLabel: sourceRecord.portionLabel }
+        : {}),
+      ...(analysis?.confidence !== undefined
+        ? { confidence: analysis.confidence }
+        : {}),
+      ...(analysis?.estimatedCalories !== undefined
+        ? { estimatedCalories: analysis.estimatedCalories }
+        : {}),
+      ...(analysis?.estimatedCarbsG !== undefined
+        ? { estimatedCarbsG: analysis.estimatedCarbsG }
+        : {}),
+      ...(analysis?.estimatedProteinG !== undefined
+        ? { estimatedProteinG: analysis.estimatedProteinG }
+        : {}),
+      ...(analysis?.estimatedFatG !== undefined
+        ? { estimatedFatG: analysis.estimatedFatG }
+        : {}),
+      ...(analysis?.notes ? { notes: analysis.notes } : {}),
+      ...(analysis?.suggestedEdits?.length
+        ? { suggestedEdits: analysis.suggestedEdits }
+        : {}),
+      ...(!analysis && notes.trim() ? { notes: notes.trim() } : {}),
     });
   }, [
+    analysis,
     mealLabel,
     mealType,
     notes,
@@ -92,7 +188,19 @@ export function MealPhotoCaptureCard({
     selectedFile,
   ]);
 
-  const clearSelection = () => {
+  const clearSelection = async (deleteRemote = true) => {
+    if (deleteRemote && uploadedImagePathRef.current) {
+      try {
+        await deleteFile(uploadedImagePathRef.current);
+      } catch {
+        // Ignore cleanup failures for a discarded draft.
+      } finally {
+        uploadedImagePathRef.current = null;
+      }
+    } else {
+      uploadedImagePathRef.current = null;
+    }
+
     if (previewUrlRef.current) {
       URL.revokeObjectURL(previewUrlRef.current);
       previewUrlRef.current = null;
@@ -100,16 +208,22 @@ export function MealPhotoCaptureCard({
 
     setSelectedFile(null);
     setPreviewUrl(undefined);
+    setUploadedImageUrl(null);
+    setAnalysis(null);
     setOpen(false);
     setMealType("other");
     setMealLabel("Meal photo");
     setPortionLabel("");
     setNotes("");
+    setIsAnalyzing(false);
+    setIsSaving(false);
   };
 
   const handleCapture = async (file: File) => {
     setSuccessMessage(null);
     setErrorMessage(null);
+    setIsAnalyzing(true);
+    setOpen(false);
 
     if (previewUrlRef.current) {
       URL.revokeObjectURL(previewUrlRef.current);
@@ -120,11 +234,52 @@ export function MealPhotoCaptureCard({
 
     setSelectedFile(file);
     setPreviewUrl(nextPreviewUrl);
-    setMealLabel(deriveMealLabel(file));
-    setMealType("other");
-    setPortionLabel("");
-    setNotes("");
-    setOpen(true);
+    const fileName = sanitizeFileName(file.name || "meal-photo.jpg");
+    const storagePath = buildPatientFoodPhotoPath(
+      patientId,
+      `${Date.now()}-${fileName}`,
+    );
+
+    uploadedImagePathRef.current = storagePath;
+
+    try {
+      const imageUrl = await uploadFile(storagePath, file, {
+        contentType: file.type || "image/jpeg",
+      });
+
+      setUploadedImageUrl(imageUrl);
+
+      const draft = await analyzeMealPhoto(
+        imageUrl,
+        patientId,
+        file.name,
+        file.type || "image/jpeg",
+        deriveMealLabel(file),
+      );
+
+      setAnalysis(draft);
+      setMealLabel(draft.mealLabel);
+      setMealType(draft.mealType);
+      setPortionLabel(draft.portionLabel ?? "");
+      setNotes(draft.notes ?? "");
+    } catch (error) {
+      const fallbackMealLabel = deriveMealLabel(file);
+
+      setAnalysis(null);
+      setUploadedImageUrl(null);
+      setMealLabel(fallbackMealLabel);
+      setMealType("other");
+      setPortionLabel("");
+      setNotes("");
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "We could not analyze the meal photo yet.",
+      );
+    } finally {
+      setIsAnalyzing(false);
+      setOpen(true);
+    }
   };
 
   const handleSubmit = async (payload: {
@@ -134,7 +289,7 @@ export function MealPhotoCaptureCard({
     notes?: string;
     status: "draft" | "confirmed";
   }) => {
-    if (!selectedFile) {
+    if (!selectedFile || !uploadedImageUrl) {
       throw new Error("Please capture a photo before saving.");
     }
 
@@ -143,20 +298,13 @@ export function MealPhotoCaptureCard({
 
     try {
       const fileName = sanitizeFileName(selectedFile.name || "meal-photo.jpg");
-      const storagePath = buildPatientFoodPhotoPath(
-        patientId,
-        `${Date.now()}-${fileName}`,
-      );
-      const imageUrl = await uploadFile(storagePath, selectedFile, {
-        contentType: selectedFile.type || "image/jpeg",
-      });
 
       const recordInput = {
         patientId,
         mealType: payload.mealType,
         mealLabel: payload.mealLabel,
         imageName: fileName,
-        imageUrl,
+        imageUrl: uploadedImageUrl,
         source: "photo",
         status: payload.status,
         ...(previewRecord?.confidence !== undefined
@@ -174,6 +322,9 @@ export function MealPhotoCaptureCard({
         ...(previewRecord?.estimatedFatG !== undefined
           ? { estimatedFatG: previewRecord.estimatedFatG }
           : {}),
+        ...(previewRecord?.suggestedEdits?.length
+          ? { suggestedEdits: previewRecord.suggestedEdits }
+          : {}),
         ...(payload.portionLabel ? { portionLabel: payload.portionLabel } : {}),
         ...(payload.notes ? { notes: payload.notes } : {}),
         capturedAt: new Date(),
@@ -181,7 +332,7 @@ export function MealPhotoCaptureCard({
 
       await createFoodPhotoRecordAction(recordInput);
 
-      clearSelection();
+      await clearSelection(false);
       setSuccessMessage(
         payload.status === "confirmed"
           ? "Meal photo saved."
@@ -232,8 +383,16 @@ export function MealPhotoCaptureCard({
           previewAlt={previewRecord?.mealLabel ?? "Meal photo preview"}
           onCapture={handleCapture}
           onClear={clearSelection}
+          disabled={isAnalyzing || isSaving}
           className="border border-[color:var(--ui-border)] bg-[color:var(--ui-surface)] shadow-none"
         />
+
+        {isAnalyzing ? (
+          <div className="inline-flex items-center gap-2 rounded-full border border-[color:var(--ui-border)] bg-[color:var(--ui-surface-strong)] px-4 py-2 text-sm text-[color:var(--ui-muted)]">
+            <Loader2 className="h-4 w-4 animate-spin text-[color:var(--ui-accent)]" />
+            Analyzing the meal photo...
+          </div>
+        ) : null}
 
         <div className="grid gap-3 rounded-[1.5rem] border border-[color:var(--ui-border)] bg-[color:var(--ui-surface-strong)] p-4 text-sm leading-6 text-[color:var(--ui-muted)]">
           <div className="flex items-center gap-2 font-semibold text-[color:var(--ui-text)]">

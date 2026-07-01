@@ -4,11 +4,13 @@ import { z } from "zod";
 import { AI_MODELS } from "@/lib/constants";
 import { logger } from "@/lib/logger";
 import {
+  analyzeFoodPhoto,
   extractClinicalDocument,
   generateVisitSummary,
 } from "@/features/ai/service";
 import {
   aiWorkflowSchema,
+  foodPhotoAnalysisInputSchema,
   documentExtractionInputSchema,
   visitSummaryInputSchema,
 } from "@/features/ai/validation";
@@ -34,11 +36,20 @@ export async function POST(request: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json(
         { error: "A workflow and input payload are required." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     switch (parsed.data.workflow) {
+      case "food_photo_analysis": {
+        const input = foodPhotoAnalysisInputSchema.parse(parsed.data.input);
+        const draft = await analyzeFoodPhoto(input);
+
+        return NextResponse.json({
+          workflow: parsed.data.workflow,
+          draft,
+        });
+      }
       case "document_extraction": {
         const input = documentExtractionInputSchema.parse(parsed.data.input);
         const draft = await extractClinicalDocument(input);
@@ -68,8 +79,7 @@ export async function POST(request: NextRequest) {
             ? error.message
             : "The Gemini request could not be completed.",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
-

@@ -5,7 +5,13 @@
  * =============================================================================
  */
 
-import { GoogleGenAI } from "@google/genai";
+import {
+  GoogleGenAI,
+  createPartFromText,
+  createPartFromUri,
+  createUserContent,
+  type ContentListUnion,
+} from "@google/genai";
 import { AI_MODELS } from "@/lib/constants";
 
 import {
@@ -14,6 +20,16 @@ import {
   DOCUMENT_EXTRACTION_SYSTEM_PROMPT,
   VISIT_SUMMARY_SYSTEM_PROMPT,
 } from "@/lib/ai/prompts";
+import {
+  buildFoodPhotoAnalysisPrompt,
+  FOOD_PHOTO_ANALYSIS_SYSTEM_PROMPT,
+  FOOD_PHOTO_ANALYSIS_RESPONSE_JSON_SCHEMA,
+  foodPhotoAnalysisDraftSchema,
+  foodPhotoAnalysisInputSchema,
+  foodPhotoAnalysisResponseSchema,
+  type FoodPhotoAnalysisDraft,
+  type FoodPhotoAnalysisInput,
+} from "@/lib/ai/food-photo";
 import {
   documentExtractionDraftSchema,
   documentExtractionInputSchema,
@@ -31,10 +47,7 @@ import {
   VISIT_SUMMARY_RESPONSE_JSON_SCHEMA,
 } from "@/lib/ai/summarize";
 import { logger } from "@/lib/logger";
-import {
-  AI_DRAFT_DISCLAIMER,
-  compactAiMetadata,
-} from "@/lib/ai/metadata";
+import { AI_DRAFT_DISCLAIMER, compactAiMetadata } from "@/lib/ai/metadata";
 
 import { z, type ZodTypeAny } from "zod";
 
@@ -47,10 +60,7 @@ function readEnv(name: string): string | undefined {
   return value && value.trim().length > 0 ? value.trim() : undefined;
 }
 
-function readBooleanEnv(
-  name: string,
-  fallback = true
-): boolean {
+function readBooleanEnv(name: string, fallback = true): boolean {
   const value = readEnv(name);
 
   if (value === undefined) {
@@ -79,7 +89,7 @@ function getGeminiClient(): GoogleGenAI {
 
   if (!apiKey) {
     throw new Error(
-      "GEMINI_API_KEY is not configured. Add it to your environment before using the AI service."
+      "GEMINI_API_KEY is not configured. Add it to your environment before using the AI service.",
     );
   }
 
@@ -108,17 +118,26 @@ function parseJsonResponse(text: string): unknown {
   return JSON.parse(stripJsonCodeFence(text));
 }
 
-async function generateStructuredJson<TSchema extends ZodTypeAny>(
-  params: {
-    model: string;
-    systemInstruction: string;
-    contents: string;
-    responseJsonSchema: Record<string, unknown>;
-    validator: TSchema;
-    temperature: number;
-    maxOutputTokens: number;
-  }
-): Promise<z.infer<TSchema>> {
+function createImageContent(
+  prompt: string,
+  imageUrl: string,
+  mimeType: string,
+): ContentListUnion {
+  return createUserContent([
+    createPartFromText(prompt),
+    createPartFromUri(imageUrl, mimeType),
+  ]);
+}
+
+async function generateStructuredJson<TSchema extends ZodTypeAny>(params: {
+  model: string;
+  systemInstruction: string;
+  contents: ContentListUnion;
+  responseJsonSchema: Record<string, unknown>;
+  validator: TSchema;
+  temperature: number;
+  maxOutputTokens: number;
+}): Promise<z.infer<TSchema>> {
   const response = await getGeminiClient().models.generateContent({
     model: params.model,
     contents: params.contents,
@@ -141,10 +160,7 @@ async function generateStructuredJson<TSchema extends ZodTypeAny>(
   return parsed;
 }
 
-function normalizeSourceText(
-  sourceText: string,
-  maxLength = 16_000
-): string {
+function normalizeSourceText(sourceText: string, maxLength = 16_000): string {
   const normalized = sourceText.replace(/\r\n/g, "\n").trim();
 
   if (normalized.length <= maxLength) {
@@ -155,15 +171,115 @@ function normalizeSourceText(
 }
 
 /* -------------------------------------------------------------------------- */
+/*                              Food Photos                                   */
+/* -------------------------------------------------------------------------- */
+
+export async function analyzeFoodPhoto(
+  input: FoodPhotoAnalysisInput,
+): Promise<FoodPhotoAnalysisDraft> {
+  if (!readBooleanEnv("ENABLE_AI_FOOD_PHOTO", true)) {
+    throw new Error(
+      "AI food photo analysis is disabled. Set ENABLE_AI_FOOD_PHOTO=true to enable it.",
+    );
+  }
+
+  const validatedInput = foodPhotoAnalysisInputSchema.parse(input);
+  const model = getGeminiModel();
+  const prompt = buildFoodPhotoAnalysisPrompt({
+    patientId: validatedInput.patientId,
+    ...(validatedInput.fileName ? { fileName: validatedInput.fileName } : {}),
+    ...(validatedInput.mimeType ? { mimeType: validatedInput.mimeType } : {}),
+    ...(validatedInput.imageUrl ? { imageUrl: validatedInput.imageUrl } : {}),
+    ...(validatedInput.mealTypeHint
+      ? { mealTypeHint: validatedInput.mealTypeHint }
+      : {}),
+    ...(validatedInput.mealLabelHint
+      ? { mealLabelHint: validatedInput.mealLabelHint }
+      : {}),
+    ...(validatedInput.portionHint
+      ? { portionHint: validatedInput.portionHint }
+      : {}),
+    ...(validatedInput.notesHint
+      ? { notesHint: validatedInput.notesHint }
+      : {}),
+  });
+
+  const response = await getGeminiClient().models.generateContent({
+    model,
+    contents: createImageContent(
+      prompt,
+      validatedInput.imageUrl,
+      validatedInput.mimeType ?? "image/jpeg",
+    ),
+    config: {
+      systemInstruction: FOOD_PHOTO_ANALYSIS_SYSTEM_PROMPT,
+      temperature: 0.2,
+      maxOutputTokens: 1200,
+      responseMimeType: "application/json",
+      responseJsonSchema: FOOD_PHOTO_ANALYSIS_RESPONSE_JSON_SCHEMA as Record<
+        string,
+        unknown
+      >,
+    },
+  });
+
+  const text = response.text?.trim();
+
+  if (!text) {
+    throw new Error("Gemini returned an empty food photo response.");
+  }
+
+  const parsed = foodPhotoAnalysisResponseSchema.parse(parseJsonResponse(text));
+
+  const draft = foodPhotoAnalysisDraftSchema.parse({
+    ...parsed,
+    patientId: validatedInput.patientId,
+    ...(validatedInput.fileName ? { fileName: validatedInput.fileName } : {}),
+    ...(validatedInput.mimeType ? { mimeType: validatedInput.mimeType } : {}),
+    model,
+    metadata: compactAiMetadata({
+      aiDisclaimer: AI_DRAFT_DISCLAIMER,
+      patientId: validatedInput.patientId,
+      fileName: validatedInput.fileName,
+      mimeType: validatedInput.mimeType,
+      imageUrl: validatedInput.imageUrl,
+      mealTypeHint: validatedInput.mealTypeHint,
+      mealLabelHint: validatedInput.mealLabelHint,
+      portionHint: validatedInput.portionHint,
+      notesHint: validatedInput.notesHint,
+      confidence: parsed.confidence,
+      traceability: {
+        kind: "food_photo_analysis",
+        fileName: validatedInput.fileName,
+        mimeType: validatedInput.mimeType,
+        imageUrl: validatedInput.imageUrl,
+        mealTypeHint: validatedInput.mealTypeHint,
+        mealLabelHint: validatedInput.mealLabelHint,
+        portionHint: validatedInput.portionHint,
+        notesHint: validatedInput.notesHint,
+      },
+    }),
+  });
+
+  logger.info("Generated AI food photo analysis draft", {
+    patientId: validatedInput.patientId,
+    fileName: validatedInput.fileName,
+    confidence: draft.confidence,
+  });
+
+  return draft;
+}
+
+/* -------------------------------------------------------------------------- */
 /*                            Document Extraction                              */
 /* -------------------------------------------------------------------------- */
 
 export async function extractClinicalDocument(
-  input: DocumentExtractionInput
+  input: DocumentExtractionInput,
 ): Promise<DocumentExtractionDraft> {
   if (!readBooleanEnv("ENABLE_AI_EXTRACTION", true)) {
     throw new Error(
-      "AI document extraction is disabled. Set ENABLE_AI_EXTRACTION=true to enable it."
+      "AI document extraction is disabled. Set ENABLE_AI_EXTRACTION=true to enable it.",
     );
   }
 
@@ -186,7 +302,9 @@ export async function extractClinicalDocument(
     ...(validatedInput.physicianName
       ? { physicianName: validatedInput.physicianName }
       : {}),
-    ...(validatedInput.sourceUrl ? { sourceUrl: validatedInput.sourceUrl } : {}),
+    ...(validatedInput.sourceUrl
+      ? { sourceUrl: validatedInput.sourceUrl }
+      : {}),
     ...(validatedInput.notes ? { notes: validatedInput.notes } : {}),
   };
 
@@ -271,11 +389,11 @@ export async function extractClinicalDocument(
 /* -------------------------------------------------------------------------- */
 
 export async function generateVisitSummary(
-  input: VisitSummaryInput
+  input: VisitSummaryInput,
 ): Promise<VisitSummaryDraft> {
   if (!readBooleanEnv("ENABLE_AI_SUMMARIZATION", true)) {
     throw new Error(
-      "AI visit summarization is disabled. Set ENABLE_AI_SUMMARIZATION=true to enable it."
+      "AI visit summarization is disabled. Set ENABLE_AI_SUMMARIZATION=true to enable it.",
     );
   }
 
