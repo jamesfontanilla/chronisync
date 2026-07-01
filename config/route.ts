@@ -23,6 +23,8 @@ export const ROUTES = {
 
     FORGOT_PASSWORD: "/auth/forgot-password",
 
+    LOGOUT: "/auth/logout",
+
     CALLBACK: "/auth/callback",
   },
 
@@ -114,6 +116,7 @@ export const PUBLIC_ROUTES = [
   ROUTES.AUTH.LOGIN,
   ROUTES.AUTH.REGISTER,
   ROUTES.AUTH.FORGOT_PASSWORD,
+  ROUTES.AUTH.LOGOUT,
   ROUTES.AUTH.CALLBACK,
 ] as const;
 

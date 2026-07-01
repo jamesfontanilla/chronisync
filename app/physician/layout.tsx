@@ -1,19 +1,18 @@
 import type { ReactNode } from "react";
 
 import { AccountMenu } from "@/components/common/AccountMenu";
-import { BottomNav } from "@/components/patient-mobile/BottomNav";
 
-export default function PatientLayout({
+export default function PhysicianLayout({
   children,
 }: {
   children: ReactNode;
 }) {
   return (
     <div
-      className="patient-layout grid gap-4"
+      className="physician-layout grid gap-4"
       style={{
         paddingTop: "1rem",
-        paddingBottom: "calc(7.5rem + env(safe-area-inset-bottom))",
+        paddingBottom: "1rem",
       }}
     >
       <div className="px-4 sm:px-6 lg:px-8">
@@ -23,8 +22,6 @@ export default function PatientLayout({
       </div>
 
       {children}
-
-      <BottomNav />
     </div>
   );
 }
