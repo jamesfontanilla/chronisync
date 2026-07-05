@@ -66,6 +66,7 @@
     "node_modules",
     ".next",
     "out",
-    "dist"
+    "dist",
+    "app/sw.ts"
   ]
 }

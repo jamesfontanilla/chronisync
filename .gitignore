@@ -20,6 +20,11 @@ node_modules/
 .next/
 out/
 
+# Serwist-generated service worker (build output, see next.config.ts)
+public/sw.js
+public/sw.js.map
+public/swe-worker-*.js
+
 # -----------------------------------------------------------------------------
 # Build Output
 # -----------------------------------------------------------------------------
