@@ -90,7 +90,7 @@ export function BottomNav({ className }: BottomNavProps) {
                 className={cn(
                   "patient-nav__icon grid h-11 w-11 place-items-center rounded-full border border-transparent transition duration-200",
                   item.accent
-                    ? "bg-[color:var(--ui-accent)] text-white shadow-[0_8px_18px_rgba(11,101,116,0.24)]"
+                    ? "bg-[color:var(--ui-accent-fill)] text-[#1a1a1a] shadow-[0_8px_18px_rgba(0,0,0,0.2)]"
                     : active
                       ? "border-[color:var(--ui-accent)] bg-white/70 text-[color:var(--ui-accent)]"
                       : "bg-transparent text-[color:var(--ui-muted)]"

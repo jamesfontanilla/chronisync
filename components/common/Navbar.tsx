@@ -108,7 +108,7 @@ export function Navbar({
 
         <span className="navbar__brand-copy">
           <strong>{APP_CONFIG.shortName}</strong>
-          <small>Glassmorphism UI</small>
+          <small>Flat Signal UI</small>
         </span>
       </Link>
 
@@ -371,14 +371,14 @@ export function Navbar({
         }
 
         .navbar__button--solid {
-          color: #f8f7f1;
+          color: #1a1a1a;
           background: linear-gradient(
             135deg,
-            var(--ui-accent),
-            var(--ui-accent-strong)
+            var(--ui-accent-fill),
+            var(--ui-accent-fill-strong)
           );
           box-shadow:
-            0 16px 30px rgba(11, 76, 89, 0.2),
+            0 16px 30px rgba(0, 0, 0, 0.18),
             inset 0 1px 0 rgba(255, 255, 255, 0.2);
         }
 

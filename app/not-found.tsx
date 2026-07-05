@@ -113,9 +113,9 @@ const linkBaseStyle = {
 
 const primaryLinkStyle = {
   ...linkBaseStyle,
-  color: "#f8f7f1",
-  background: "linear-gradient(135deg, var(--ui-accent), var(--ui-accent-strong))",
-  boxShadow: "0 16px 30px rgba(11, 76, 89, 0.2)",
+  color: "#1a1a1a",
+  background: "linear-gradient(135deg, var(--ui-accent-fill), var(--ui-accent-fill-strong))",
+  boxShadow: "0 16px 30px rgba(0, 0, 0, 0.18)",
 } as const;
 
 const secondaryLinkStyle = {

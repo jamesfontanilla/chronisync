@@ -19,7 +19,7 @@ export function Toaster() {
           closeButton:
             "border border-[color:var(--ui-border)] bg-[color:var(--ui-surface)] text-[color:var(--ui-muted)]",
           actionButton:
-            "bg-[linear-gradient(135deg,var(--ui-accent),var(--ui-accent-strong))] text-white",
+            "bg-[linear-gradient(135deg,var(--ui-accent-fill),var(--ui-accent-fill-strong))] text-[#1a1a1a]",
           cancelButton:
             "border border-[color:var(--ui-border)] bg-transparent text-[color:var(--ui-text)]",
         },
