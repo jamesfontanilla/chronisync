@@ -12,7 +12,7 @@ const Card = React.forwardRef<
       <div
       ref={ref}
       className={cn(
-        "self-start rounded-[2rem] border border-[color:var(--ui-border)] bg-[color:var(--ui-surface-strong)] text-[color:var(--ui-text)] shadow-[0_30px_90px_rgba(9,30,36,0.14)] backdrop-blur-xl",
+        "self-start rounded-[2rem] border border-[color:var(--ui-border)] bg-[color:var(--ui-card-bg)] text-[color:var(--ui-text)] shadow-[var(--ui-card-shadow)]",
         className
       )}
       {...props}

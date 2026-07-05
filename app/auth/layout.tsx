@@ -11,9 +11,8 @@ const shellStyle = {
   display: "grid",
   gridTemplateColumns: "var(--auth-shell-columns)",
   gap: "var(--auth-shell-gap)",
-  background:
-    "radial-gradient(circle at top left, rgba(15, 118, 110, 0.32), transparent 36%), radial-gradient(circle at bottom right, rgba(234, 179, 8, 0.18), transparent 32%), linear-gradient(135deg, #051419 0%, #0a2230 52%, #f5efe5 52%, #f8f4ec 100%)",
-  color: "#e6f6f7",
+  background: "#0a0a0a",
+  color: "#f5f5f5",
 } as const;
 
 const heroStyle = {
@@ -22,6 +21,7 @@ const heroStyle = {
   padding: "var(--auth-hero-padding)",
   display: "flex",
   alignItems: "stretch",
+  background: "#0a0a0a",
 } as const;
 
 const heroCardStyle = {
@@ -30,10 +30,9 @@ const heroCardStyle = {
   width: "100%",
   borderRadius: "32px",
   padding: "clamp(1.5rem, 4vw, 3rem)",
-  background: "rgba(4, 15, 20, 0.62)",
+  background: "#1c1c1e",
   border: "1px solid rgba(255, 255, 255, 0.12)",
-  boxShadow: "0 30px 80px rgba(2, 9, 13, 0.35)",
-  backdropFilter: "blur(16px)",
+  boxShadow: "0 30px 80px rgba(0, 0, 0, 0.35)",
 } as const;
 
 const eyebrowStyle = {
@@ -41,7 +40,7 @@ const eyebrowStyle = {
   textTransform: "uppercase",
   letterSpacing: "0.28em",
   fontSize: "0.72rem",
-  color: "#78d6d0",
+  color: "#4ade80",
 } as const;
 
 const titleStyle = {
@@ -49,7 +48,7 @@ const titleStyle = {
   fontSize: "clamp(1.95rem, 5vw, 4.8rem)",
   lineHeight: 0.95,
   letterSpacing: "-0.05em",
-  color: "#f6fbfb",
+  color: "#f5f5f5",
 } as const;
 
 const bodyStyle = {
@@ -57,7 +56,7 @@ const bodyStyle = {
   maxWidth: "42rem",
   fontSize: "1.02rem",
   lineHeight: 1.7,
-  color: "rgba(230, 246, 247, 0.82)",
+  color: "rgba(245, 245, 245, 0.82)",
 } as const;
 
 const metricsStyle = {
@@ -79,9 +78,8 @@ const formColumnStyle = {
   alignItems: "stretch",
   justifyContent: "center",
   padding: "var(--auth-form-padding)",
-  background:
-    "linear-gradient(180deg, rgba(248, 244, 236, 0.92), rgba(245, 239, 229, 0.98))",
-  color: "#08232b",
+  background: "#f7f7f8",
+  color: "#1a1a1a",
 } as const;
 
 const formFrameStyle = {
@@ -102,7 +100,7 @@ const rolePillStyle = {
   background: "rgba(255, 255, 255, 0.08)",
   border: "1px solid rgba(255, 255, 255, 0.12)",
   fontSize: "0.88rem",
-  color: "rgba(230, 246, 247, 0.82)",
+  color: "rgba(245, 245, 245, 0.82)",
 } as const;
 
 export default function AuthLayout({
@@ -131,8 +129,8 @@ export default function AuthLayout({
                   width: 10,
                   height: 10,
                   borderRadius: 999,
-                  background: "#7ce7db",
-                  boxShadow: "0 0 0 6px rgba(124, 231, 219, 0.14)",
+                  background: "#4ade80",
+                  boxShadow: "0 0 0 6px rgba(74, 222, 128, 0.14)",
                 }}
               />
               Patient and physician entry points
@@ -146,7 +144,7 @@ export default function AuthLayout({
                       fontSize: "0.8rem",
                       letterSpacing: "0.2em",
                       textTransform: "uppercase",
-                      color: "rgba(230, 246, 247, 0.58)",
+                      color: "rgba(245, 245, 245, 0.58)",
                     }}
                   >
                     {option.label}
@@ -156,7 +154,7 @@ export default function AuthLayout({
                       margin: "0.55rem 0 0",
                       fontSize: "0.94rem",
                       lineHeight: 1.55,
-                      color: "rgba(246, 251, 251, 0.88)",
+                      color: "rgba(245, 245, 245, 0.88)",
                     }}
                   >
                     {option.description}
@@ -183,16 +181,6 @@ export default function AuthLayout({
         }
 
         @media (max-width: 720px) {
-          .auth-shell {
-            background:
-              radial-gradient(
-                circle at top left,
-                rgba(15, 118, 110, 0.26),
-                transparent 42%
-              ),
-              linear-gradient(180deg, #051419 0%, #0a2230 42%, #f8f4ec 42%, #f8f4ec 100%);
-          }
-
           .auth-hero {
             padding-bottom: 0 !important;
           }

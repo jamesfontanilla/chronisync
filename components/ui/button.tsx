@@ -12,7 +12,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-[linear-gradient(135deg,var(--ui-accent),var(--ui-accent-strong))] text-white shadow-[0_16px_30px_rgba(11,76,89,0.2)] hover:-translate-y-0.5",
+          "bg-[linear-gradient(135deg,var(--ui-accent-fill),var(--ui-accent-fill-strong))] text-[#1a1a1a] shadow-[0_16px_30px_rgba(0,0,0,0.18)] hover:-translate-y-0.5",
         secondary:
           "border border-[color:var(--ui-border)] bg-[color:var(--ui-surface)] text-[color:var(--ui-text)] hover:-translate-y-0.5 hover:bg-[color:var(--ui-surface-strong)]",
         outline:
@@ -20,7 +20,7 @@ const buttonVariants = cva(
         ghost:
           "bg-transparent text-[color:var(--ui-text)] hover:bg-[color:var(--ui-accent-soft)]",
         destructive:
-          "bg-[color:var(--ui-warning)] text-white shadow-sm hover:-translate-y-0.5",
+          "bg-[color:var(--ui-warning)] text-[color:var(--ui-warning-fill-text)] shadow-sm hover:-translate-y-0.5",
         glass:
           "border border-[color:var(--ui-border)] bg-white/10 text-[color:var(--ui-text)] backdrop-blur-md hover:-translate-y-0.5 hover:bg-white/15",
         link: "bg-transparent text-[color:var(--ui-accent)] underline-offset-4 hover:underline",

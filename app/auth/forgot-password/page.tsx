@@ -12,10 +12,9 @@ import { useForgotPasswordForm } from "@/features/authentication/hooks";
 const pageCardStyle = {
   borderRadius: "28px",
   padding: "clamp(1.4rem, 3vw, 2.2rem)",
-  background: "rgba(255, 255, 255, 0.84)",
-  border: "1px solid rgba(8, 35, 43, 0.1)",
-  boxShadow: "0 24px 60px rgba(9, 30, 36, 0.12)",
-  backdropFilter: "blur(14px)",
+  background: "#ffffff",
+  border: "1px solid rgba(10, 10, 10, 0.1)",
+  boxShadow: "0 24px 60px rgba(0, 0, 0, 0.12)",
 } as const;
 
 const headingStyle = {
@@ -23,12 +22,12 @@ const headingStyle = {
   fontSize: "clamp(1.8rem, 4vw, 2.6rem)",
   lineHeight: 1.05,
   letterSpacing: "-0.04em",
-  color: "#08232b",
+  color: "#1a1a1a",
 } as const;
 
 const subtitleStyle = {
   margin: "0.75rem 0 0",
-  color: "#4d6670",
+  color: "#5c5c63",
   lineHeight: 1.65,
 } as const;
 
@@ -43,17 +42,17 @@ const labelStyle = {
   gap: "0.45rem",
   fontSize: "0.92rem",
   fontWeight: 600,
-  color: "#18343f",
+  color: "#1a1a1a",
 } as const;
 
 const inputStyle = {
   width: "100%",
   borderRadius: "16px",
-  border: "1px solid rgba(8, 35, 43, 0.16)",
+  border: "1px solid rgba(10, 10, 10, 0.14)",
   background: "#fff",
   padding: "0.9rem 1rem",
   fontSize: "1rem",
-  color: "#08232b",
+  color: "#1a1a1a",
   outline: "none",
 } as const;
 
@@ -72,13 +71,13 @@ const primaryButtonStyle = {
   fontSize: "1rem",
   fontWeight: 700,
   cursor: "pointer",
-  color: "#f8f7f1",
-  background: "linear-gradient(135deg, #0b4c59, #19a39a)",
-  boxShadow: "0 16px 30px rgba(11, 76, 89, 0.25)",
+  color: "#1a1a1a",
+  background: "linear-gradient(135deg, #22c55e, #4ade80)",
+  boxShadow: "0 16px 30px rgba(0, 0, 0, 0.18)",
 } as const;
 
 const secondaryLinkStyle = {
-  color: "#0b6574",
+  color: "#15803d",
   fontWeight: 700,
   textDecoration: "none",
 } as const;
@@ -130,7 +129,7 @@ export default function ForgotPasswordPage() {
             fontSize: "0.78rem",
             letterSpacing: "0.24em",
             textTransform: "uppercase",
-            color: "#0b6574",
+            color: "#15803d",
           }}
         >
           Reset Access
@@ -177,7 +176,7 @@ export default function ForgotPasswordPage() {
       <p
         style={{
           margin: "1.2rem 0 0",
-          color: "#4d6670",
+          color: "#5c5c63",
           lineHeight: 1.6,
         }}
       >

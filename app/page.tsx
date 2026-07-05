@@ -88,9 +88,9 @@ const homeNavLinks = [
 
 const featureCards = [
   {
-    title: "Glassmorphism with restraint",
+    title: "Flat, with one signal color",
     description:
-      "Soft translucency, layered gradients, and strong contrast keep the interface premium without burying the content.",
+      "A near-black or near-white base, flat opaque cards, and a single vivid accent keep the interface clear without competing for attention.",
     icon: Sparkles,
   },
   {
@@ -116,7 +116,7 @@ export default function HomePage() {
         <section className="home-hero" id="overview">
           <div className="home-hero__panel">
             <PageHeader
-              eyebrow="Global UI: Glassmorphism"
+              eyebrow="Global UI: Flat Signal UI"
               title="A softer shell for shared chronic care."
               description={
                 <>
@@ -323,9 +323,9 @@ export default function HomePage() {
         }
 
         .home-button--primary {
-          color: #f8f7f1;
-          background: linear-gradient(135deg, var(--ui-accent), var(--ui-accent-strong));
-          box-shadow: 0 16px 30px rgba(11, 76, 89, 0.2);
+          color: #1a1a1a;
+          background: linear-gradient(135deg, var(--ui-accent-fill), var(--ui-accent-fill-strong));
+          box-shadow: 0 16px 30px rgba(0, 0, 0, 0.18);
         }
 
         .home-button--secondary {

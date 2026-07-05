@@ -2,19 +2,24 @@
 
 :root {
   color-scheme: light;
-  --ui-bg: #f7f2ea;
-  --ui-bg-alt: #eef7f5;
+  --ui-bg: #f7f7f8;
+  --ui-bg-alt: #ededf0;
   --ui-surface: rgba(255, 255, 255, 0.72);
   --ui-surface-strong: rgba(255, 255, 255, 0.88);
-  --ui-border: rgba(8, 35, 43, 0.12);
-  --ui-text: #08232b;
-  --ui-muted: #58727b;
-  --ui-accent: #0b6574;
-  --ui-accent-strong: #19a39a;
-  --ui-accent-soft: rgba(25, 163, 154, 0.14);
+  --ui-border: rgba(10, 10, 10, 0.1);
+  --ui-text: #1a1a1a;
+  --ui-muted: #5c5c63;
+  --ui-accent: #15803d;
+  --ui-accent-strong: #16a34a;
+  --ui-accent-soft: rgba(21, 128, 61, 0.14);
+  --ui-accent-fill: #22c55e;
+  --ui-accent-fill-strong: #4ade80;
   --ui-warning: #9b1c1c;
   --ui-warning-soft: rgba(180, 35, 35, 0.08);
-  --ui-shadow: 0 30px 90px rgba(9, 30, 36, 0.14);
+  --ui-warning-fill-text: #ffffff;
+  --ui-shadow: 0 30px 90px rgba(0, 0, 0, 0.12);
+  --ui-card-bg: #ffffff;
+  --ui-card-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
   --ui-radius-xl: 32px;
   --ui-radius-lg: 24px;
   --ui-radius-md: 18px;
@@ -25,75 +30,66 @@
 
 .dark {
   color-scheme: dark;
-  --ui-bg: #041118;
-  --ui-bg-alt: #0a2230;
-  --ui-surface: rgba(7, 18, 24, 0.72);
-  --ui-surface-strong: rgba(5, 15, 20, 0.88);
+  --ui-bg: #0a0a0a;
+  --ui-bg-alt: #141414;
+  --ui-surface: rgba(20, 20, 20, 0.72);
+  --ui-surface-strong: rgba(15, 15, 15, 0.88);
   --ui-border: rgba(255, 255, 255, 0.12);
-  --ui-text: #e6f6f7;
-  --ui-muted: #98b9bf;
-  --ui-accent: #78d6d0;
-  --ui-accent-strong: #a1f5e8;
-  --ui-accent-soft: rgba(120, 214, 208, 0.14);
+  --ui-text: #f5f5f5;
+  --ui-muted: #a0a0a5;
+  --ui-accent: #4ade80;
+  --ui-accent-strong: #86efac;
+  --ui-accent-soft: rgba(74, 222, 128, 0.14);
+  --ui-accent-fill: #4ade80;
+  --ui-accent-fill-strong: #86efac;
   --ui-warning: #fda4af;
   --ui-warning-soft: rgba(251, 113, 133, 0.12);
+  --ui-warning-fill-text: #1a1a1a;
   --ui-shadow: 0 34px 100px rgba(0, 0, 0, 0.32);
+  --ui-card-bg: #1c1c1e;
+  --ui-card-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-html {
-  min-height: 100%;
-  scroll-behavior: smooth;
-  background: transparent;
-}
+@layer base {
+  html {
+    min-height: 100%;
+    scroll-behavior: smooth;
+    background: transparent;
+  }
 
-body {
-  margin: 0;
-  min-height: 100vh;
-  min-height: 100dvh;
-  overflow-x: hidden;
-  color: var(--ui-text);
-  font-family: var(--font-body);
-  background:
-    radial-gradient(
-      circle at top left,
-      rgba(25, 163, 154, 0.18),
-      transparent 28%
-    ),
-    radial-gradient(
-      circle at top right,
-      rgba(234, 179, 8, 0.14),
-      transparent 24%
-    ),
-    radial-gradient(
-      circle at bottom right,
-      rgba(11, 101, 116, 0.12),
-      transparent 22%
-    ),
-    linear-gradient(180deg, var(--ui-bg) 0%, var(--ui-bg-alt) 100%);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-}
+  body {
+    margin: 0;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    color: var(--ui-text);
+    font-family: var(--font-body);
+    background: var(--ui-bg);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
 
-* {
-  box-sizing: border-box;
-}
+  * {
+    box-sizing: border-box;
+  }
 
-a {
-  color: inherit;
-  text-decoration: none;
-}
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
 
-button,
-input,
-textarea,
-select {
-  font: inherit;
-}
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
 
-::selection {
-  background: rgba(25, 163, 154, 0.28);
-  color: var(--ui-text);
+  ::selection {
+    background: rgba(34, 197, 94, 0.28);
+    color: var(--ui-text);
+  }
 }
 
 .app-shell {
