@@ -5,6 +5,7 @@ import {
   medicationRouteSchema,
   medicationStatusSchema,
 } from "@/schemas/medication";
+import { RECORD_ORIGIN_ROLES } from "@/types/provenance";
 
 const emptyToUndefined = (value: unknown) => {
   if (typeof value !== "string") {
@@ -25,6 +26,8 @@ const optionalRoute = z.preprocess(
   medicationRouteSchema.optional()
 );
 
+const recordedByRoleSchema = z.enum(RECORD_ORIGIN_ROLES).default("patient");
+
 export const medicationFormSchema = z
   .object({
     patientId: z
@@ -40,6 +43,7 @@ export const medicationFormSchema = z
     frequency: medicationFrequencySchema,
     customFrequency: optionalText,
     status: medicationStatusSchema,
+    recordedByRole: recordedByRoleSchema,
     startDate: z
       .string()
       .trim()

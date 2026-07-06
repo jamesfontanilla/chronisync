@@ -5,6 +5,8 @@
  * =============================================================================
  */
 
+import type { RecordOriginRole } from "@/types/provenance";
+
 export type DiaryEntryType =
   | "glucose"
   | "pressure"
@@ -31,6 +33,7 @@ export type DiarySyncState =
 export interface DiaryEntry {
   id: string;
   patientId: string;
+  recordedByRole?: RecordOriginRole;
   type: DiaryEntryType;
   title: string;
   content: string;
@@ -45,6 +48,7 @@ export interface DiaryEntry {
 
 export interface DiaryCreateInput {
   patientId: string;
+  recordedByRole?: RecordOriginRole;
   type: DiaryEntryType;
   title: string;
   content: string;

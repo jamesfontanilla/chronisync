@@ -5,6 +5,8 @@
  * =============================================================================
  */
 
+import type { RecordOriginRole } from "@/types/provenance";
+
 /* -------------------------------------------------------------------------- */
 /*                              Enumerations                                  */
 /* -------------------------------------------------------------------------- */
@@ -77,6 +79,11 @@ export interface Allergy {
    * UID of the user who recorded the allergy.
    */
   recordedBy?: string;
+
+  /**
+   * Role of the user who recorded the allergy.
+   */
+  recordedByRole?: RecordOriginRole;
 
   /**
    * Additional notes.

@@ -5,6 +5,8 @@
  * =============================================================================
  */
 
+import type { RecordOriginRole } from "@/types/provenance";
+
 /* -------------------------------------------------------------------------- */
 /*                              Enumerations                                  */
 /* -------------------------------------------------------------------------- */
@@ -39,6 +41,7 @@ export type NumericVitalUnit =
 interface BaseVital {
   id: string;
   patientId: string;
+  recordedByRole?: RecordOriginRole;
   recordedAt: Date;
   recordedBy?: string;
   source?: VitalSource;

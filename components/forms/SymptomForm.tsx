@@ -39,6 +39,11 @@ const selectOptions = {
     { value: "resolved", label: "Resolved" },
     { value: "worsening", label: "Worsening" },
   ],
+  recordedByRole: [
+    { value: "patient", label: "Patient" },
+    { value: "caregiver", label: "Caregiver" },
+    { value: "clinician", label: "Clinician" },
+  ],
 } as const;
 
 export interface SymptomFormProps {
@@ -135,6 +140,21 @@ export function SymptomForm({ defaultValues }: SymptomFormProps) {
               </select>
             </label>
           </div>
+
+          <label className="grid gap-2">
+            <Label htmlFor="recordedByRole">Logged by</Label>
+            <select
+              id="recordedByRole"
+              className={controlClassName}
+              {...form.register("recordedByRole")}
+            >
+              {selectOptions.recordedByRole.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
 
           <label className="grid gap-2">
             <Label htmlFor="description">Description</Label>

@@ -54,6 +54,7 @@ export function buildVitalCreateInput(
 ): VitalCreateInput {
   const base = {
     patientId: values.patientId.trim(),
+    recordedByRole: values.recordedByRole,
     recordedAt: toDate(values.recordedAt),
   } as const;
   const source = values.source;

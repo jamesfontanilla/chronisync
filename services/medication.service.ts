@@ -47,6 +47,7 @@ export function buildMedicationRecord(
 
   return {
     ...data,
+    recordedByRole: data.recordedByRole ?? "patient",
     id: createRecordId(),
     createdAt: timestamp,
     updatedAt: timestamp,

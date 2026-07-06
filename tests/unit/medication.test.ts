@@ -27,6 +27,7 @@ test("medication form values convert into a firestore-ready record", async () =>
 
   const formValues = medicationFormSchema.parse({
     patientId: "patient-demo-1",
+    recordedByRole: "caregiver",
     name: "Metformin",
     dosage: "500 mg",
     route: "oral",
@@ -43,6 +44,7 @@ test("medication form values convert into a firestore-ready record", async () =>
   const record = buildMedicationRecord(input);
 
   assert.equal(input.patientId, "patient-demo-1");
+  assert.equal(input.recordedByRole, "caregiver");
   assert.equal(input.route, "oral");
   assert.equal(input.customFrequency, "with meals");
   assert.ok(input.startDate instanceof Date);
@@ -53,6 +55,7 @@ test("medication form values convert into a firestore-ready record", async () =>
     "Expected a generated record ID"
   );
   assert.equal(record.status, "active");
+  assert.equal(record.recordedByRole, "caregiver");
   assert.equal(record.createdAt instanceof Date, true);
   assert.equal(record.updatedAt instanceof Date, true);
 });

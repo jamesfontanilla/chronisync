@@ -29,6 +29,7 @@ export function buildAllergyCreateInput(
 
   return {
     patientId: values.patientId.trim(),
+    recordedByRole: values.recordedByRole,
     allergen: values.allergen.trim(),
     type: values.type,
     severity: values.severity,

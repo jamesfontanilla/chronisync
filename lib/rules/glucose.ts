@@ -14,6 +14,12 @@ import {
   formatClinicalPercentage,
   type ClinicalRuleFinding,
 } from "./alerts";
+import {
+  analyzeNumericTrend,
+  buildTrendAnalysisMetadata,
+  describeTrendDirection,
+  type TrendAnalysis,
+} from "./trendEngine";
 
 const BLOOD_GLUCOSE_RULE_ID = "blood_glucose.high";
 const GLUCOSE_WINDOW_RULE_IDS = {
@@ -154,7 +160,8 @@ function buildMealDeltaFinding(
   readings: NumericVital[],
   physicianId: string | undefined,
   evaluatedAt: Date,
-  threshold: number
+  threshold: number,
+  trendAnalysis?: TrendAnalysis | null
 ): ClinicalRuleFinding | null {
   const taggedReadings = readings
     .map((reading) => ({
@@ -270,6 +277,11 @@ function buildMealDeltaFinding(
       delta: worstPair.delta,
       threshold,
       unit,
+      ...(trendAnalysis
+        ? {
+            trendAnalysis: buildTrendAnalysisMetadata(trendAnalysis),
+          }
+        : {}),
     },
   };
 }
@@ -279,7 +291,8 @@ function buildTirFinding(
   physicianId: string | undefined,
   tirTarget: number,
   tbrTarget: number,
-  seriousTbrTarget: number
+  seriousTbrTarget: number,
+  trendAnalysis?: TrendAnalysis | null
 ): ClinicalRuleFinding | null {
   const timeInRange = summary.inRangeReadings / summary.totalReadings;
   const belowRange = summary.belowRangeReadings / summary.totalReadings;
@@ -318,6 +331,11 @@ function buildTirFinding(
       belowRangeReadings: summary.belowRangeReadings,
       seriousLowReadings: summary.seriousLowReadings,
       coverageDays: summary.coverageDays,
+      ...(trendAnalysis
+        ? {
+            trendAnalysis: buildTrendAnalysisMetadata(trendAnalysis),
+          }
+        : {}),
     },
   };
 }
@@ -326,7 +344,8 @@ function buildTbrFinding(
   summary: GlucoseWindowSummary,
   physicianId: string | undefined,
   tbrTarget: number,
-  seriousTbrTarget: number
+  seriousTbrTarget: number,
+  trendAnalysis?: TrendAnalysis | null
 ): ClinicalRuleFinding | null {
   const belowRange = summary.belowRangeReadings / summary.totalReadings;
   const seriousLow = summary.seriousLowReadings / summary.totalReadings;
@@ -364,17 +383,27 @@ function buildTbrFinding(
       belowRangeReadings: summary.belowRangeReadings,
       seriousLowReadings: summary.seriousLowReadings,
       coverageDays: summary.coverageDays,
+      ...(trendAnalysis
+        ? {
+            trendAnalysis: buildTrendAnalysisMetadata(trendAnalysis),
+          }
+        : {}),
     },
   };
 }
 
 function buildGmiFinding(
   summary: GlucoseWindowSummary,
-  physicianId: string | undefined
+  physicianId: string | undefined,
+  trendAnalysis?: TrendAnalysis | null
 ): ClinicalRuleFinding | null {
   if (summary.gmi === undefined) {
     return null;
   }
+
+  const trendDirectionLabel = trendAnalysis
+    ? describeTrendDirection(trendAnalysis.direction)
+    : undefined;
 
   return {
     patientId: summary.readings[0]?.patientId ?? "",
@@ -383,7 +412,9 @@ function buildGmiFinding(
     ruleId: GLUCOSE_WINDOW_RULE_IDS.GMI,
     title: "Glucose Management Indicator",
     message:
-      "A glucose management indicator is available for the current CGM window.",
+      trendAnalysis && trendAnalysis.direction !== "steady"
+        ? `A glucose management indicator is available for the current CGM window, alongside a ${trendDirectionLabel} trend signal.`
+        : "A glucose management indicator is available for the current CGM window.",
     level: "info",
     metric: VITAL_TYPES.BLOOD_GLUCOSE,
     threshold: `At least ${DEFAULT_GMI_MINIMUM_DAYS} days of glucose data`,
@@ -401,6 +432,11 @@ function buildGmiFinding(
       coverageDays: summary.coverageDays,
       meanGlucose: summary.meanGlucose,
       gmi: summary.gmi,
+      ...(trendAnalysis
+        ? {
+            trendAnalysis: buildTrendAnalysisMetadata(trendAnalysis),
+          }
+        : {}),
     },
   };
 }
@@ -481,6 +517,13 @@ export function evaluateBloodGlucoseTrendRules(
     return [];
   }
 
+  const trendAnalysis = analyzeNumericTrend(
+    summary.readings.map((reading) => ({
+      recordedAt: reading.recordedAt,
+      value: reading.value,
+    }))
+  );
+
   const findings: ClinicalRuleFinding[] = [];
 
   const tirFinding = buildTirFinding(
@@ -488,7 +531,8 @@ export function evaluateBloodGlucoseTrendRules(
     physicianId,
     tirTarget,
     tbrTarget,
-    seriousTbrTarget
+    seriousTbrTarget,
+    trendAnalysis
   );
 
   if (tirFinding) {
@@ -499,14 +543,15 @@ export function evaluateBloodGlucoseTrendRules(
     summary,
     physicianId,
     tbrTarget,
-    seriousTbrTarget
+    seriousTbrTarget,
+    trendAnalysis
   );
 
   if (tbrFinding) {
     findings.push(tbrFinding);
   }
 
-  const gmiFinding = buildGmiFinding(summary, physicianId);
+  const gmiFinding = buildGmiFinding(summary, physicianId, trendAnalysis);
 
   if (gmiFinding) {
     findings.push(gmiFinding);
@@ -516,7 +561,8 @@ export function evaluateBloodGlucoseTrendRules(
     glucoseReadings,
     physicianId,
     evaluatedAt,
-    postMealDeltaThreshold
+    postMealDeltaThreshold,
+    trendAnalysis
   );
 
   if (mealDeltaFinding) {
