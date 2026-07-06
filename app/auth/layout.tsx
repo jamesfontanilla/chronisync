@@ -1,8 +1,11 @@
 "use client";
 
 import type { ReactNode } from "react";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 
 import { APP_CONFIG } from "@/config/app";
+import { ROUTES } from "@/config/route";
 import { AuthProvider } from "@/providers/AuthProvider";
 import { AUTH_ROLE_OPTIONS } from "@/lib/auth/roles";
 
@@ -33,6 +36,17 @@ const heroCardStyle = {
   background: "#1c1c1e",
   border: "1px solid rgba(255, 255, 255, 0.12)",
   boxShadow: "0 30px 80px rgba(0, 0, 0, 0.35)",
+} as const;
+
+const backLinkStyle = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "0.5rem",
+  marginBottom: "1.5rem",
+  fontSize: "0.86rem",
+  fontWeight: 600,
+  color: "rgba(245, 245, 245, 0.7)",
+  textDecoration: "none",
 } as const;
 
 const eyebrowStyle = {
@@ -113,6 +127,11 @@ export default function AuthLayout({
       <main className="auth-shell" style={shellStyle}>
         <aside className="auth-hero" style={heroStyle}>
           <div style={heroCardStyle}>
+            <Link href={ROUTES.HOME} style={backLinkStyle}>
+              <ArrowLeft size={16} aria-hidden="true" />
+              <span>{APP_CONFIG.shortName}</span>
+            </Link>
+
             <p style={eyebrowStyle}>ChroniSync Auth</p>
             <h1 style={titleStyle}>
               Shared chronic care, without losing the human in the loop.
