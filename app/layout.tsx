@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { APP_CONFIG } from "@/config/app";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { ThemeProvider } from "@/providers/ThemeProvider";
+import { ChatBot } from "@/components/ai/ChatBot";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -59,6 +60,7 @@ export default function RootLayout({
         <ThemeProvider>
           <QueryProvider>
             <div className="app-shell">{children}</div>
+            <ChatBot />
           </QueryProvider>
         </ThemeProvider>
       </body>
