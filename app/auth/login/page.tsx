@@ -15,6 +15,7 @@ import {
   useLoginForm,
   useAuthRoleOptions,
 } from "@/features/authentication/hooks";
+import { IS_DEMO_MODE, DEMO_ACCOUNTS } from "@/lib/demo/accounts";
 
 const pageCardStyle = {
   borderRadius: "28px",
@@ -141,6 +142,35 @@ export default function LoginPage() {
 
   return (
     <article style={pageCardStyle}>
+      {IS_DEMO_MODE && (
+        <div
+          style={{
+            borderRadius: "16px",
+            padding: "0.85rem 1rem",
+            marginBottom: "1.2rem",
+            background: "rgba(34, 197, 94, 0.08)",
+            border: "1px solid rgba(34, 197, 94, 0.28)",
+            fontSize: "0.88rem",
+            lineHeight: 1.6,
+            color: "#14532d",
+          }}
+        >
+          <strong style={{ display: "block", marginBottom: "0.3rem" }}>🧪 Demo Mode</strong>
+          {DEMO_ACCOUNTS.map((acc) => (
+            <span
+              key={acc.email}
+              style={{ display: "block" }}
+            >
+              <strong style={{ textTransform: "capitalize" }}>{acc.role}</strong>
+              {" — "}
+              <code style={{ fontSize: "0.84rem" }}>{acc.email}</code>
+              {" / "}
+              <code style={{ fontSize: "0.84rem" }}>{acc.password}</code>
+            </span>
+          ))}
+        </div>
+      )}
+
       <header>
         <p
           style={{

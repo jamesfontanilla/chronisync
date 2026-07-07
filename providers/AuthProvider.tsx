@@ -3,6 +3,7 @@
 import {
   createContext,
   useEffect,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -25,6 +26,7 @@ import {
   signInWithRole,
   signOutCurrentUser,
 } from "@/features/authentication/service";
+import { IS_DEMO_MODE, findDemoAccount } from "@/lib/demo/accounts";
 
 export interface AuthContextValue {
   user: FirebaseUser | null;
@@ -54,8 +56,17 @@ export function AuthProvider({
   );
   const [isLoading, setIsLoading] = useState(true);
 
+  /**
+   * When demo mode is active and a seed user is logged in, we block the
+   * Firebase onAuthStateChanged observer from overwriting our mock user.
+   */
+  const demoAuthActive = useRef(false);
+
   useEffect(() => {
     const unsubscribe = observeAuthState((nextUser) => {
+      // In demo mode with an active session, ignore Firebase state updates.
+      if (demoAuthActive.current) return;
+
       setUser(nextUser);
       setIsLoading(false);
 
@@ -77,12 +88,36 @@ export function AuthProvider({
   }
 
   async function signIn(values: LoginFormData): Promise<FirebaseUser> {
+    // ── Demo mode bypass ──────────────────────────────────────────────────
+    if (IS_DEMO_MODE) {
+      const demoAccount = findDemoAccount(values.email, values.password);
+
+      if (!demoAccount) {
+        throw new Error(
+          "Demo mode: invalid credentials.\n" +
+          "Try patient@demo.com or doctor@demo.com with password Demo1234!"
+        );
+      }
+
+      demoAuthActive.current = true;
+      setUser(demoAccount.user);
+      setRole(values.role);
+      return demoAccount.user;
+    }
+    // ── Real Firebase ─────────────────────────────────────────────────────
     const result = await signInWithRole(values);
     setRole(values.role);
     return result.user;
   }
 
   async function register(values: RegisterFormData): Promise<FirebaseUser> {
+    if (IS_DEMO_MODE) {
+      throw new Error(
+        "Registration is disabled in demo mode. " +
+        "Use the preset seed accounts instead."
+      );
+    }
+
     const result = await registerWithRole(values);
     setRole(values.role);
     return result.user;
@@ -91,11 +126,20 @@ export function AuthProvider({
   async function sendPasswordReset(
     values: ForgotPasswordFormData | string
   ): Promise<void> {
+    if (IS_DEMO_MODE) return; // no-op in demo mode
+
     const email = typeof values === "string" ? values : values.email;
     await requestPasswordReset(email);
   }
 
   async function signOut(): Promise<void> {
+    if (IS_DEMO_MODE && demoAuthActive.current) {
+      demoAuthActive.current = false;
+      setUser(null);
+      setRole(null);
+      return;
+    }
+
     await signOutCurrentUser();
     setUser(null);
     setRole(null);
