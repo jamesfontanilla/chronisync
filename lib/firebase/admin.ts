@@ -81,7 +81,7 @@ export function getAdminApp(): App {
     projectId: config.projectId,
   };
   
-  if (process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+  if (process.env["NEXT_PUBLIC_DEMO_MODE"] !== "true") {
     options.credential = cert({
       projectId: config.projectId,
       clientEmail: config.clientEmail,

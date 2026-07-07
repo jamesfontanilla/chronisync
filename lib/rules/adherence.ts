@@ -72,8 +72,6 @@ export function buildAdherenceObservationsFromLogs(
         expectedDoses: 0,
         takenDoses: 0,
         missedDoses: 0,
-        lastTakenAt: undefined,
-        lastLoggedAt: undefined,
       });
     }
 

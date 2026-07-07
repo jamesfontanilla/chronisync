@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 
 import { PageHeader } from "@/components/common/PageHeader";
 import { BloodPressureChart } from "@/components/charts/BloodPressureChart";
@@ -85,7 +86,28 @@ function formatVitalTypeLabel(type: Vital["type"]): string {
 }
 
 export default function VitalsPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-[color:var(--ui-muted)]">Loading vitals...</div>}>
+      <VitalsPageContent />
+    </Suspense>
+  );
+}
+
+function VitalsPageContent() {
   const { user } = useAuth();
+  const searchParams = useSearchParams();
+  const typeParam = searchParams.get("type");
+
+  const defaultValues = useMemo(() => {
+    const values: any = {
+      patientId: user?.uid ?? "",
+    };
+    if (typeParam) {
+      values.type = typeParam;
+    }
+    return values;
+  }, [user?.uid, typeParam]);
+
   const { data: records = [] } = useVitalRecordsQuery(user?.uid);
 
   const recentRecords = useMemo(() => {
@@ -156,7 +178,7 @@ export default function VitalsPage() {
       />
 
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
-        <VitalForm />
+        <VitalForm defaultValues={defaultValues} />
 
         <div className="grid gap-6">
           <Card>

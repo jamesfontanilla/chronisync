@@ -63,7 +63,7 @@ export function ChatBot() {
 
     // Simulate network delay and bot response
     setTimeout(() => {
-      let botResponseContent = SCRIPTED_RESPONSES["default"];
+      let botResponseContent = SCRIPTED_RESPONSES["default"] || "I'm a demo bot. Please ask something else.";
       
       // Simple matching logic: find a key that is included in the user's message
       const lowerInput = userMessage.content.toLowerCase();

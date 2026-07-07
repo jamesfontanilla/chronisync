@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { createVitalRecord } from "@/features/vitals/actions";
 import { useVitalForm } from "@/features/vitals/hooks";
 import type { VitalFormValues } from "@/features/vitals/validation";
+import { useAuth } from "@/hooks/useAuth";
 
 const controlClassName =
   "flex h-11 w-full rounded-full border border-[color:var(--ui-border)] bg-[color:var(--ui-surface-strong)] px-4 py-2 text-sm text-[color:var(--ui-text)] shadow-sm outline-none transition-colors placeholder:text-[color:var(--ui-muted)] focus-visible:border-[color:var(--ui-accent)] focus-visible:ring-2 focus-visible:ring-[color:var(--ui-accent-soft)] disabled:cursor-not-allowed disabled:opacity-50";
@@ -58,10 +59,24 @@ export interface VitalFormProps {
 }
 
 export function VitalForm({ defaultValues }: VitalFormProps) {
+  const { user } = useAuth();
   const form = useVitalForm(defaultValues);
   const [message, setMessage] = useState<string | null>(null);
+  const [isGeneratingDemoData, setIsGeneratingDemoData] = useState(false);
   const selectedType = form.watch("type");
   const isBloodPressure = selectedType === "blood_pressure";
+
+  // Pre-populate/set values dynamically when defaultValues change (like patientId or type query parameter)
+  useEffect(() => {
+    if (defaultValues) {
+      if (defaultValues.patientId) {
+        form.setValue("patientId", defaultValues.patientId);
+      }
+      if (defaultValues.type) {
+        form.setValue("type", defaultValues.type);
+      }
+    }
+  }, [defaultValues?.patientId, defaultValues?.type, form]);
 
   const valueField = isBloodPressure
     ? null
@@ -71,6 +86,106 @@ export function VitalForm({ defaultValues }: VitalFormProps) {
           "blood_pressure"
         >
       ];
+
+  const handleGenerateDemoData = async () => {
+    const patientId = form.getValues("patientId") || user?.uid || "";
+    if (!patientId) {
+      setMessage("Please enter or ensure there is a Patient ID first.");
+      return;
+    }
+
+    setIsGeneratingDemoData(true);
+    setMessage("Generating demo trend data...");
+
+    try {
+      const now = new Date();
+      const recordsToCreate = [];
+
+      for (let i = 13; i >= 0; i--) {
+        const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+        const dateStr = date.toISOString().split("T")[0];
+
+        // Blood Pressure (stable first, then rises)
+        let systolic = 120 + Math.floor(Math.random() * 5); // 120-124
+        let diastolic = 80 + Math.floor(Math.random() * 3) - 1; // 79-81
+        if (i === 3) { systolic = 130; diastolic = 84; }
+        else if (i === 2) { systolic = 135; diastolic = 86; }
+        else if (i === 1) { systolic = 138; diastolic = 88; }
+        else if (i === 0) { systolic = 142; diastolic = 90; }
+
+        recordsToCreate.push({
+          patientId,
+          recordedByRole: "patient" as const,
+          type: "blood_pressure" as const,
+          systolic: String(systolic),
+          diastolic: String(diastolic),
+          recordedAt: dateStr,
+          source: "device" as const,
+          notes: i === 0 ? "Blood pressure elevated above normal thresholds." : "Routine measurement.",
+        });
+
+        // Glucose (stable first, then rises)
+        let glucose = 100 + Math.floor(Math.random() * 10); // 100-109
+        if (i === 3) { glucose = 125; }
+        else if (i === 2) { glucose = 140; }
+        else if (i === 1) { glucose = 155; }
+        else if (i === 0) { glucose = 172; }
+
+        recordsToCreate.push({
+          patientId,
+          recordedByRole: "patient" as const,
+          type: "blood_glucose" as const,
+          value: String(glucose),
+          recordedAt: dateStr,
+          source: "device" as const,
+          notes: i === 0 ? "Glucose trending upward over past week." : "Fasting blood sugar check.",
+        });
+
+        // Heart Rate (handful across window, stable)
+        if (i % 3 === 0) {
+          const hr = 70 + Math.floor(Math.random() * 8); // 70-77
+          recordsToCreate.push({
+            patientId,
+            recordedByRole: "patient" as const,
+            type: "heart_rate" as const,
+            value: String(hr),
+            recordedAt: dateStr,
+            source: "device" as const,
+            notes: "Resting heart rate.",
+          });
+        }
+
+        // Weight (handful across window, stable)
+        if (i % 3 === 0) {
+          const wt = 78.0 + (Math.floor(Math.random() * 5) / 10); // 78.0 - 78.4
+          recordsToCreate.push({
+            patientId,
+            recordedByRole: "patient" as const,
+            type: "weight" as const,
+            value: String(wt),
+            recordedAt: dateStr,
+            source: "device" as const,
+            notes: "Morning weight check.",
+          });
+        }
+      }
+
+      for (const record of recordsToCreate) {
+        await createVitalRecord(record as any);
+      }
+
+      setMessage("Demo vital signs successfully generated!");
+      window.location.reload();
+    } catch (error) {
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "We could not generate the demo data."
+      );
+    } finally {
+      setIsGeneratingDemoData(false);
+    }
+  };
 
   const onSubmit = form.handleSubmit(async (values) => {
     setMessage(null);
@@ -215,15 +330,24 @@ export function VitalForm({ defaultValues }: VitalFormProps) {
           ) : null}
 
           <div className="flex flex-wrap gap-3">
-            <Button type="submit" disabled={form.formState.isSubmitting}>
+            <Button type="submit" disabled={form.formState.isSubmitting || isGeneratingDemoData}>
               {form.formState.isSubmitting ? "Saving..." : "Save vital"}
             </Button>
             <Button
               type="button"
               variant="secondary"
               onClick={() => form.reset()}
+              disabled={form.formState.isSubmitting || isGeneratingDemoData}
             >
               Reset
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleGenerateDemoData}
+              disabled={form.formState.isSubmitting || isGeneratingDemoData}
+            >
+              {isGeneratingDemoData ? "Generating..." : "Generate Demo Data"}
             </Button>
           </div>
         </form>

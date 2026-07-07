@@ -34,7 +34,7 @@ const quickLogTiles: QuickLogTile[] = [
     description: "Fast blood sugar logging with room for context.",
     icon: Droplets,
     tone: "from-cyan-500/20 to-transparent",
-    href: "/patient/vitals",
+    href: "/patient/vitals?type=blood_glucose",
     cta: "Open vitals form",
   },
   {
@@ -42,7 +42,7 @@ const quickLogTiles: QuickLogTile[] = [
     description: "Record systolic and diastolic in one calm step.",
     icon: HeartPulse,
     tone: "from-blue-500/20 to-transparent",
-    href: "/patient/vitals",
+    href: "/patient/vitals?type=blood_pressure",
     cta: "Open vitals form",
   },
   {
@@ -50,7 +50,7 @@ const quickLogTiles: QuickLogTile[] = [
     description: "Track morning trends and fluid swings over time.",
     icon: Scale,
     tone: "from-emerald-500/20 to-transparent",
-    href: "/patient/vitals",
+    href: "/patient/vitals?type=weight",
     cta: "Open vitals form",
   },
   {
