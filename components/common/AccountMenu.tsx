@@ -66,10 +66,14 @@ function getSettingsPath(role: UserRole | null): string {
 }
 
 export function AccountMenu({ className, compact = false }: AccountMenuProps) {
-  const [user, setUser] = useState<FirebaseUser | null>(() => getCurrentUser());
+  const [user, setUser] = useState<FirebaseUser | null>(null);
+  const [hasMounted, setHasMounted] = useState(false);
   const role = getRoleCookie();
 
   useEffect(() => {
+    setUser(getCurrentUser());
+    setHasMounted(true);
+
     const unsubscribe = observeAuthState((nextUser) => {
       setUser(nextUser);
     });
@@ -77,12 +81,12 @@ export function AccountMenu({ className, compact = false }: AccountMenuProps) {
     return unsubscribe;
   }, []);
 
-  const displayName =
-    user?.displayName?.trim() ||
-    user?.email?.split("@")[0] ||
-    "Account";
-  const detailLabel =
-    user?.email || (role ? `${getRoleLabel(role)} session` : null);
+  const displayName = hasMounted
+    ? user?.displayName?.trim() || user?.email?.split("@")[0] || "Account"
+    : "Account";
+  const detailLabel = hasMounted
+    ? user?.email || (role ? `${getRoleLabel(role)} session` : null)
+    : null;
   const initials = getInitials(user?.displayName || user?.email);
   const homePath = role ? getRoleHomePath(role) : ROUTES.AUTH.LOGIN;
   const settingsPath = getSettingsPath(role);

@@ -26,23 +26,9 @@ service cloud.firestore {
       );
     }
 
-    function isPatientScopedCollection(collection) {
-      return collection == "medications" ||
-        collection == "allergies" ||
-        collection == "vitals" ||
-        collection == "symptoms" ||
-        collection == "diseases" ||
-        collection == "documents" ||
-        collection == "treatmentPlans" ||
-        collection == "appointments" ||
-        collection == "alerts" ||
-        collection == "summaries" ||
-        collection == "notifications";
-    }
-
     match /users/{userId} {
-      allow read, create, update: if signedIn() &&
-        (request.auth.uid == userId || isAdmin());
+      allow read: if signedIn() && (request.auth.uid == userId || isAdmin());
+      allow create, update: if signedIn() && request.auth.uid == userId;
       allow delete: if isAdmin();
 
       match /{document=**} {
@@ -52,7 +38,8 @@ service cloud.firestore {
     }
 
     match /patients/{patientId} {
-      allow read, create, update: if signedIn() &&
+      allow read: if signedIn() && (request.auth.uid == patientId || isPhysician());
+      allow create, update: if signedIn() &&
         (request.auth.uid == patientId || isPhysician());
       allow delete: if isAdmin();
 
@@ -63,7 +50,8 @@ service cloud.firestore {
     }
 
     match /physicians/{physicianId} {
-      allow read, create, update: if signedIn() &&
+      allow read: if signedIn() && (request.auth.uid == physicianId || isAdmin());
+      allow create, update: if signedIn() &&
         (request.auth.uid == physicianId || isAdmin());
       allow delete: if isAdmin();
 
@@ -74,18 +62,18 @@ service cloud.firestore {
     }
 
     match /{collection}/{documentId} {
-      allow read: if isPatientScopedCollection(collection) &&
+      allow read: if signedIn() &&
         (isPhysician() || ownsScopedRecord(resource.data));
 
-      allow create: if isPatientScopedCollection(collection) &&
+      allow create: if signedIn() &&
         (isPhysician() || ownsScopedRecord(request.resource.data));
 
-      allow update: if isPatientScopedCollection(collection) &&
+      allow update: if signedIn() &&
         (isPhysician() ||
           (ownsScopedRecord(resource.data) &&
             ownsScopedRecord(request.resource.data)));
 
-      allow delete: if isPatientScopedCollection(collection) &&
+      allow delete: if signedIn() &&
         (isPhysician() || ownsScopedRecord(resource.data));
     }
 

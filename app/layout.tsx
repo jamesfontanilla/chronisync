@@ -4,6 +4,8 @@ import type { ReactNode } from "react";
 import { APP_CONFIG } from "@/config/app";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { ThemeProvider } from "@/providers/ThemeProvider";
+// Suppress TypeScript error for side-effect import of a plain CSS file
+// because global CSS declarations are handled outside this file.
 import "./globals.css";
 
 export const metadata: Metadata = {

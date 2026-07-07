@@ -1,2 +1,10 @@
 packages:
-  - "."
+  - .
+
+onlyBuiltDependencies:
+  - '@firebase/util'
+  - '@google/genai'
+  - esbuild
+  - protobufjs
+  - sharp
+  - unrs-resolver

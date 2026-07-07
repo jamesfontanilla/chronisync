@@ -1,3 +1,7 @@
+import type { Alert } from "@/types/alert";
+import type { Document as PatientDocument } from "@/types/document";
+import type { Vital } from "@/types/vital";
+
 export type TrendDirection = "up" | "down" | "steady";
 
 export interface DashboardMetric {
@@ -32,6 +36,12 @@ export interface DashboardSnapshotInput {
   generatedAt?: Date | string;
 }
 
+export interface PatientDashboardSnapshotInput {
+  alerts?: Alert[];
+  documents?: PatientDocument[];
+  vitals?: Vital[];
+}
+
 export function buildDashboardSnapshot(
   input: DashboardSnapshotInput = {}
 ): DashboardSnapshot {
@@ -47,65 +57,70 @@ export function buildDashboardSnapshot(
   };
 }
 
-export const defaultDashboardSnapshot: DashboardSnapshot = buildDashboardSnapshot({
-  metrics: [
-    {
-      label: "Open records",
-      value: "18",
-      detail: "Active medication, symptom, and vital logs",
-      change: "+3 this week",
-      direction: "up",
-    },
-    {
-      label: "Unread alerts",
-      value: "4",
-      detail: "Needs physician review",
-      change: "-2 from yesterday",
-      direction: "down",
-    },
-    {
-      label: "Stable vitals",
-      value: "87%",
-      detail: "Most recent trend window",
-      change: "+6%",
-      direction: "up",
-    },
-    {
-      label: "Pending uploads",
-      value: "2",
-      detail: "Documents waiting for review",
-      change: "No change",
-      direction: "steady",
-    },
-  ],
-  trends: [
-    {
-      title: "Blood pressure",
-      description: "Last seven readings",
-      color: "#0b6574",
-      points: [
-        { label: "Mon", value: 128 },
-        { label: "Tue", value: 126 },
-        { label: "Wed", value: 123 },
-        { label: "Thu", value: 127 },
-        { label: "Fri", value: 124 },
-        { label: "Sat", value: 122 },
-        { label: "Sun", value: 121 },
-      ],
-    },
-    {
-      title: "Glucose",
-      description: "Fasting readings",
-      color: "#19a39a",
-      points: [
-        { label: "Mon", value: 110 },
-        { label: "Tue", value: 108 },
-        { label: "Wed", value: 112 },
-        { label: "Thu", value: 109 },
-        { label: "Fri", value: 106 },
-        { label: "Sat", value: 105 },
-        { label: "Sun", value: 103 },
-      ],
-    },
-  ],
-});
+function isVitalStable(vital: Vital): boolean {
+  switch (vital.type) {
+    case "blood_pressure":
+      return vital.systolic <= 140 && vital.diastolic <= 90;
+    case "blood_glucose":
+      return vital.value <= 180;
+    case "heart_rate":
+      return vital.value <= 100;
+    case "oxygen_saturation":
+      return vital.value >= 95;
+    case "temperature":
+      return vital.value >= 97 && vital.value <= 99;
+    case "weight":
+      return vital.value > 0;
+    default:
+      return true;
+  }
+}
+
+export function buildPatientDashboardSnapshot(
+  input: PatientDashboardSnapshotInput = {}
+): DashboardSnapshot {
+  const alerts = input.alerts ?? [];
+  const documents = input.documents ?? [];
+  const vitals = input.vitals ?? [];
+
+  const openAlerts = alerts.filter(
+    (alert) => alert.status === "open" || alert.status === "acknowledged"
+  ).length;
+  const pendingUploads = documents.filter((document) =>
+    ["pending", "processing", "review_required"].includes(document.status)
+  ).length;
+  const stableVitals = vitals.filter(isVitalStable).length;
+
+  return buildDashboardSnapshot({
+    metrics: [
+      {
+        label: "Open records",
+        value: String(openAlerts + pendingUploads),
+        detail: "Active items that need attention",
+        direction: openAlerts + pendingUploads > 0 ? "up" : "steady",
+      },
+      {
+        label: "Unread alerts",
+        value: String(openAlerts),
+        detail: "Alerts still waiting for review",
+        direction: openAlerts > 0 ? "down" : "steady",
+      },
+      {
+        label: "Stable vitals",
+        value: String(stableVitals),
+        detail: "Recent vitals in a healthy range",
+        direction: stableVitals > 0 ? "up" : "steady",
+      },
+      {
+        label: "Pending uploads",
+        value: String(pendingUploads),
+        detail: "Documents waiting for review",
+        direction: pendingUploads > 0 ? "steady" : "up",
+      },
+    ],
+    trends: [],
+    generatedAt: new Date(),
+  });
+}
+
+export const defaultDashboardSnapshot: DashboardSnapshot = buildPatientDashboardSnapshot();

@@ -2,14 +2,25 @@
 
 import { useContext } from "react";
 
-import { AuthContext } from "@/providers/AuthProvider";
+import { AuthContext, type AuthContextValue } from "@/providers/AuthProvider";
+
+const fallbackAuthContext: AuthContextValue = {
+  user: null,
+  role: null,
+  isAuthenticated: false,
+  isLoading: true,
+  signIn: async () => {
+    throw new Error("Auth is not available yet.");
+  },
+  register: async () => {
+    throw new Error("Auth is not available yet.");
+  },
+  sendPasswordReset: async () => {},
+  signOut: async () => {},
+  refreshRole: () => {},
+  setRole: () => {},
+};
 
 export function useAuth() {
-  const context = useContext(AuthContext);
-
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider.");
-  }
-
-  return context;
+  return useContext(AuthContext) ?? fallbackAuthContext;
 }

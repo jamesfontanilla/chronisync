@@ -28,7 +28,6 @@
     "forceConsistentCasingInFileNames": true,
 
     /* Imports */
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
       "@/app/*": ["./app/*"],

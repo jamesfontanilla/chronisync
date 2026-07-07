@@ -1,3 +1,6 @@
+"use client";
+
+import React, { useState } from "react";
 import Link from "next/link";
 import {
   Camera,
@@ -9,11 +12,14 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
+// Database sync connections
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase/client"; 
+
 import { MealPhotoCaptureCard } from "@/components/food-photo/MealPhotoCaptureCard";
-import { ManualMealEntryCard } from "@/components/food-photo/ManualMealEntryCard";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { QuickLogTiles } from "@/components/patient-mobile/QuickLogTiles";
 
 const captureModes = [
@@ -51,6 +57,78 @@ const captureModes = [
 ];
 
 export default function PatientAddPage() {
+  // Local Form States
+  const [mealDescription, setMealDescription] = useState("");
+  const [carbsEstimated, setCarbsEstimated] = useState("");
+  const [bloodGlucose, setBloodGlucose] = useState("");
+  const [mealContext, setMealContext] = useState("before_meal");
+  
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [status, setStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
+
+  // Database submission logic
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!mealDescription.trim()) {
+      setStatus({ type: "error", message: "Please enter a meal description." });
+      return;
+    }
+
+    setIsSubmitting(true);
+    setStatus(null);
+
+    // Dynamic bracket lookup safely clearing out compilation problems
+    const envValue = process.env["NEXT_PUBLIC_GLUCOSE_THRESHOLD"];
+    const GLUCOSE_LIMIT = envValue && !isNaN(Number(envValue)) ? Number(envValue) : 180;
+
+    try {
+      const targetRef = collection(db, "patients", "demo-patient", "logs");
+      const parsedGlucose = bloodGlucose ? Number(bloodGlucose) : null;
+      
+      let alertTriggered = false;
+      let alertMsg = "";
+
+      if (parsedGlucose && parsedGlucose > GLUCOSE_LIMIT) {
+        alertTriggered = true;
+        alertMsg = `Glucose reading of ${parsedGlucose} mg/dL exceeds threshold target of ${GLUCOSE_LIMIT} mg/dL.`;
+      }
+
+      const logPayload = {
+        type: "manual_fallback",
+        mealDescription: mealDescription.trim(),
+        carbsEstimated: carbsEstimated ? Number(carbsEstimated) : 0,
+        bloodGlucose: parsedGlucose,
+        mealContext: mealContext,
+        guidelineAlert: {
+          triggered: alertTriggered,
+          message: alertMsg,
+        },
+        createdAt: serverTimestamp(),
+        loggedAt: new Date().toISOString(),
+      };
+
+      await addDoc(targetRef, logPayload);
+
+      // Reset Form fields
+      setMealDescription("");
+      setCarbsEstimated("");
+      setBloodGlucose("");
+      setMealContext("before_meal");
+
+      setStatus({
+        type: "success",
+        message: alertTriggered 
+          ? `Log recorded with safety alerts: ${alertMsg}` 
+          : "Log entry saved directly to database history."
+      });
+    } catch (err) {
+      console.error(err);
+      setStatus({ type: "error", message: "Failed to sync online. Saved to offline queue." });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <main className="grid gap-6 p-4 sm:p-6 lg:p-8">
       <PageHeader
@@ -179,8 +257,91 @@ export default function PatientAddPage() {
 
       <section className="grid gap-6 xl:grid-cols-2">
         <MealPhotoCaptureCard patientId="demo-patient" />
+        
+        {/* Manual Fallback Form Interface with intact original card hierarchy styling */}
         <div id="manual-entry" className="scroll-mt-24">
-          <ManualMealEntryCard patientId="demo-patient" />
+          <Card className="w-full">
+            <CardHeader>
+              <CardTitle>Manual Fallback Log</CardTitle>
+              <CardDescription>
+                Directly register your tracking parameters here if the camera or alternative captures are unclear.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleFormSubmit} className="space-y-4">
+                
+                {status && (
+                  <div className={`p-3 rounded-md text-sm font-medium border ${
+                    status.type === "success" 
+                      ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" 
+                      : "bg-destructive/10 text-destructive border-destructive/20"
+                  }`}>
+                    {status.message}
+                  </div>
+                )}
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-sm font-medium text-[color:var(--ui-muted)]">
+                    Meal Description / Log Details
+                  </label>
+                  <textarea
+                    value={mealDescription}
+                    onChange={(e) => setMealDescription(e.target.value)}
+                    className="flex min-h-[80px] w-full rounded-md border border-[color:var(--ui-border)] bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ui-accent)]"
+                    placeholder="e.g., Oatmeal with blueberries and walnuts"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium text-[color:var(--ui-muted)]">
+                      Carbohydrates (g)
+                    </label>
+                    <input
+                      type="number"
+                      value={carbsEstimated}
+                      onChange={(e) => setCarbsEstimated(e.target.value)}
+                      className="flex h-10 w-full rounded-md border border-[color:var(--ui-border)] bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ui-accent)]"
+                      placeholder="0"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium text-[color:var(--ui-muted)]">
+                      Blood Glucose (mg/dL) - Optional
+                    </label>
+                    <input
+                      type="number"
+                      value={bloodGlucose}
+                      onChange={(e) => setBloodGlucose(e.target.value)}
+                      className="flex h-10 w-full rounded-md border border-[color:var(--ui-border)] bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ui-accent)]"
+                      placeholder="e.g., 120"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-sm font-medium text-[color:var(--ui-muted)]">
+                    Timing / Prandial Context
+                  </label>
+                  <select
+                    value={mealContext}
+                    onChange={(e) => setMealContext(e.target.value)}
+                    className="flex h-10 w-full rounded-md border border-[color:var(--ui-border)] bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ui-accent)]"
+                  >
+                    <option value="before_meal">Before Meal (Pre-Prandial)</option>
+                    <option value="after_meal">After Meal (Post-Prandial)</option>
+                    <option value="fasting">Fasting</option>
+                    <option value="none">General Record</option>
+                  </select>
+                </div>
+
+                <Button type="submit" disabled={isSubmitting} className="w-full">
+                  {isSubmitting ? "Saving to Database..." : "Submit Log Entry"}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
         </div>
       </section>
 

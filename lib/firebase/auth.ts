@@ -17,7 +17,13 @@ import {
   type Unsubscribe,
 } from "firebase/auth";
 
+import { COLLECTIONS } from "@/config/firebase";
 import { auth } from "@/lib/firebase/client";
+import { createDocument } from "@/lib/firebase/firestore";
+import {
+  buildRoleProfileData,
+  buildUserProfileData,
+} from "@/lib/firebase/auth-profile";
 import type {
   LoginCredentials,
   RegisterCredentials,
@@ -41,6 +47,19 @@ export async function registerUser(
   await updateProfile(result.user, {
     displayName: fullName,
   });
+
+  const userProfile = buildUserProfileData(
+    result.user,
+    credentials
+  );
+  await createDocument(COLLECTIONS.USERS, result.user.uid, userProfile);
+
+  const roleProfile = buildRoleProfileData(result.user, credentials);
+  await createDocument(
+    roleProfile.collectionName,
+    result.user.uid,
+    roleProfile.data
+  );
 
   await sendEmailVerification(result.user);
 
