@@ -1,13 +1,14 @@
 /**
  * =============================================================================
  * ChroniSync
- * AI Food Photo Schemas and Prompts
+ * AI Food Photo Schemas, Prompts, and Analysis Client
  * =============================================================================
  */
 
 import { z } from "zod";
 
 import { AI } from "@/config/constants";
+
 
 export const foodPhotoMealTypeSchema = z.enum([
   "breakfast",
@@ -29,9 +30,7 @@ export const foodPhotoAnalysisInputSchema = z.object({
   notesHint: z.string().trim().optional(),
 });
 
-export type FoodPhotoAnalysisInput = z.infer<
-  typeof foodPhotoAnalysisInputSchema
->;
+export type FoodPhotoAnalysisInput = z.infer<typeof foodPhotoAnalysisInputSchema>;
 
 export const foodPhotoAnalysisResponseSchema = z
   .object({
@@ -49,9 +48,7 @@ export const foodPhotoAnalysisResponseSchema = z
   })
   .passthrough();
 
-export type FoodPhotoAnalysisResponse = z.infer<
-  typeof foodPhotoAnalysisResponseSchema
->;
+export type FoodPhotoAnalysisResponse = z.infer<typeof foodPhotoAnalysisResponseSchema>;
 
 export const FOOD_PHOTO_ANALYSIS_RESPONSE_JSON_SCHEMA = {
   type: "object",
@@ -136,6 +133,7 @@ export const FOOD_PHOTO_ANALYSIS_RESPONSE_JSON_SCHEMA = {
   },
 } as const;
 
+
 export const foodPhotoAnalysisDraftSchema =
   foodPhotoAnalysisResponseSchema.extend({
     patientId: z.string().trim().min(1, "Patient ID is required."),
@@ -148,9 +146,11 @@ export const foodPhotoAnalysisDraftSchema =
     metadata: z.record(z.string(), z.unknown()).default({}),
   });
 
-export type FoodPhotoAnalysisDraft = z.infer<
-  typeof foodPhotoAnalysisDraftSchema
->;
+export type FoodPhotoAnalysisDraft = z.infer<typeof foodPhotoAnalysisDraftSchema>;
+
+// ---------------------------------------------------------------------------
+// Prompts
+// ---------------------------------------------------------------------------
 
 export const FOOD_PHOTO_ANALYSIS_SYSTEM_PROMPT = [
   "You analyze meal photos for a chronic disease management app.",
@@ -190,4 +190,81 @@ export function buildFoodPhotoAnalysisPrompt(
   ]
     .filter((line): line is string => Boolean(line))
     .join("\n\n");
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => {
+      const result = reader.result as string;
+      const parts = result.split(",");
+      const base64 = parts[1];
+      if (!base64) {
+        reject(new Error("Failed to extract base64 data from file."));
+        return;
+      }
+      resolve(base64);
+    };
+    reader.onerror = () => reject(new Error("Failed to read file as data URL."));
+  });
+}
+
+export async function analyzeMealPhoto(
+  file: File,
+  input: FoodPhotoAnalysisPromptInput,
+): Promise<FoodPhotoAnalysisResponse> {
+  const base64Data = await fileToBase64(file);
+
+  const promptText = buildFoodPhotoAnalysisPrompt(input);
+
+  const apiKey = process.env['GEMINI_API_KEY'];
+  if (!apiKey) {
+    throw new Error("GEMINI_API_KEY is not set in environment variables.");
+  }
+
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contents: [
+        {
+          parts: [
+            { text: promptText },
+            {
+              inlineData: {
+                mimeType: file.type,
+                data: base64Data,
+              },
+            },
+          ],
+        },
+      ],
+      generationConfig: {
+        responseMimeType: "application/json",
+        responseSchema: FOOD_PHOTO_ANALYSIS_RESPONSE_JSON_SCHEMA,
+      },
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Gemini API error (${response.status}): ${errorText}`);
+  }
+
+  const data = await response.json();
+
+  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!text) {
+    throw new Error("Gemini API returned an empty or unexpected response.");
+  }
+
+  const parsed = JSON.parse(text);
+  return foodPhotoAnalysisResponseSchema.parse(parsed);
 }

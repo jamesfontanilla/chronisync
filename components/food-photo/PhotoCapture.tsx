@@ -42,10 +42,11 @@ export function PhotoCapture({
   onClear,
 }: PhotoCaptureProps) {
   const inputId = useId();
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const cameraInputRef = useRef<HTMLInputElement | null>(null);
+  const galleryInputRef = useRef<HTMLInputElement | null>(null);
 
   const openFilePicker = () => {
-    fileInputRef.current?.click();
+    galleryInputRef.current?.click();
   };
 
   const handleChange = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -72,11 +73,20 @@ export function PhotoCapture({
 
       <CardContent className="grid gap-5">
         <input
-          ref={fileInputRef}
+          ref={cameraInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          className="sr-only"
+          onChange={handleChange}
+          disabled={disabled}
+        />
+
+        <input
+          ref={galleryInputRef}
           id={inputId}
           type="file"
-          accept={accept}
-          capture={capture}
+          accept="image/*"
           className="sr-only"
           onChange={handleChange}
           disabled={disabled}
@@ -121,7 +131,7 @@ export function PhotoCapture({
         <div className="flex flex-wrap gap-3">
           <Button
             type="button"
-            onClick={openFilePicker}
+            onClick={() => cameraInputRef.current?.click()}
             disabled={disabled}
           >
             <Camera className="h-4 w-4" />
