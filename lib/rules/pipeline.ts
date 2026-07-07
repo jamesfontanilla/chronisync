@@ -19,9 +19,15 @@ import { logger } from "@/lib/logger";
 import { createAlert } from "@/services/alert.service";
 import { listOpenAlertsByPatient } from "@/services/alert.service";
 import { listVitalsByPatient } from "@/services/vital.service";
+import { listActiveMedicationsByPatient } from "@/services/medication.service";
+import { listAdherenceLogsByPatient } from "@/services/adherence.service";
 import type { Vital } from "@/types/vital";
 import type { Disease } from "@/types/disease";
 import type { Patient } from "@/types/patient";
+import type { Medication } from "@/types/medication";
+import type { AdherenceLog } from "@/types/adherence";
+
+import { buildAdherenceObservationsFromLogs } from "./adherence";
 
 import {
   buildClinicalAlertInputs,
@@ -128,22 +134,33 @@ export async function evaluateAndPersistAlertsForPatient(
 ): Promise<Awaited<ReturnType<typeof createAlert>>[]> {
   const evaluatedAt = options.evaluatedAt ?? new Date();
 
-  /* -------- 1. Fetch vitals ------------------------------------------------ */
+  /* -------- 1. Fetch vitals, medications, and adherence ------------------ */
   let vitals: Vital[] = [];
+  let medications: Medication[] = [];
+  let adherenceLogs: AdherenceLog[] = [];
 
   try {
-    vitals = await listVitalsByPatient(patientId);
+    const [fetchedVitals, fetchedMedications, fetchedAdherence] = await Promise.all([
+      listVitalsByPatient(patientId),
+      listActiveMedicationsByPatient(patientId),
+      listAdherenceLogsByPatient(patientId)
+    ]);
+    vitals = fetchedVitals;
+    medications = fetchedMedications;
+    adherenceLogs = fetchedAdherence;
   } catch (error) {
-    logger.error("Alert pipeline: failed to fetch vitals", {
+    logger.error("Alert pipeline: failed to fetch patient clinical data", {
       patientId,
       error: error instanceof Error ? error.message : String(error),
     });
     return [];
   }
 
-  if (vitals.length === 0) {
+  if (vitals.length === 0 && medications.length === 0) {
     return [];
   }
+
+  const adherenceObservations = buildAdherenceObservationsFromLogs(adherenceLogs, evaluatedAt);
 
   /* -------- 2. Best-effort patient lookup (for routing + physicianId) ------ */
   const patient = await fetchPatient(patientId);
@@ -156,6 +173,8 @@ export async function evaluateAndPersistAlertsForPatient(
   try {
     findings = evaluateClinicalRules({
       vitals,
+      medications,
+      adherenceObservations,
       // Always pass an array (possibly empty) — never undefined — because
       // exactOptionalPropertyTypes does not allow Disease[] | undefined.
       diseases,

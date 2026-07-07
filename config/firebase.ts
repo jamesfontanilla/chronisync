@@ -67,6 +67,8 @@ export const COLLECTIONS = {
   SUMMARIES: "summaries",
 
   NOTIFICATIONS: "notifications",
+
+  ADHERENCE: "adherence",
 } as const;
 
 /* -------------------------------------------------------------------------- */

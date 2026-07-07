@@ -9,6 +9,7 @@ import type {
   Medication,
   MedicationFrequency,
 } from "@/types/medication";
+import type { AdherenceLog } from "@/types/adherence";
 
 import {
   formatClinicalNumber,
@@ -56,6 +57,47 @@ export interface MedicationAdherenceSummary {
   adherenceRate: number | null;
   latestTakenAt?: Date;
   latestLoggedAt?: Date;
+}
+
+export function buildAdherenceObservationsFromLogs(
+  logs: AdherenceLog[],
+  evaluatedAt: Date = new Date()
+): MedicationAdherenceObservation[] {
+  const observationsByMedication = new Map<string, MedicationAdherenceObservation>();
+
+  for (const log of logs) {
+    if (!observationsByMedication.has(log.medicationId)) {
+      observationsByMedication.set(log.medicationId, {
+        medicationId: log.medicationId,
+        expectedDoses: 0,
+        takenDoses: 0,
+        missedDoses: 0,
+        lastTakenAt: undefined,
+        lastLoggedAt: undefined,
+      });
+    }
+
+    const obs = observationsByMedication.get(log.medicationId)!;
+
+    if (log.scheduledTime <= evaluatedAt) {
+      obs.expectedDoses = (obs.expectedDoses || 0) + 1;
+
+      if (log.takenAt) {
+        obs.takenDoses = (obs.takenDoses || 0) + 1;
+        if (!obs.lastTakenAt || log.takenAt > obs.lastTakenAt) {
+          obs.lastTakenAt = log.takenAt;
+        }
+      } else {
+        obs.missedDoses = (obs.missedDoses || 0) + 1;
+      }
+    }
+
+    if (!obs.lastLoggedAt || log.createdAt > obs.lastLoggedAt) {
+      obs.lastLoggedAt = log.createdAt;
+    }
+  }
+
+  return Array.from(observationsByMedication.values());
 }
 
 function isTrackedMedication(
