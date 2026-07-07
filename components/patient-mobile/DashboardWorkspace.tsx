@@ -9,6 +9,7 @@ import {
   HeartPulse,
   Mic,
   ShieldCheck,
+  TriangleAlert,
 } from "lucide-react";
 
 import { MetricCard } from "@/components/dashboard/MetricCard";
@@ -64,6 +65,58 @@ export function DashboardWorkspace({
 
   return (
     <section className="grid gap-6">
+      {/* ALERT SECTION */}
+      <Card className="overflow-hidden border-[color:var(--ui-warning)] bg-[linear-gradient(135deg,rgba(180,35,35,0.08),rgba(180,35,35,0.03))]">
+        <CardHeader className="p-4 sm:p-6">
+          <div className="flex items-start gap-4">
+            <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl border border-[color:var(--ui-warning)] bg-[color:var(--ui-warning-soft)] text-[color:var(--ui-warning)]">
+              <TriangleAlert size={18} />
+            </div>
+
+            <div className="grid gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <CardTitle className="text-xl font-semibold text-[color:var(--ui-warning)]">
+                  Clinical Alert: CKD & Diabetes Comorbid Risk
+                </CardTitle>
+                <Badge variant="destructive">
+                  Critical Alert
+                </Badge>
+              </div>
+              <CardDescription className="text-sm font-medium text-[color:var(--ui-text)] mt-1">
+                ⚠ Alert: Blood glucose trending upward over the past 7 days — GMI approaching threshold. Blood pressure elevated (Day 27: 142/90, above 140 systolic threshold).
+              </CardDescription>
+              <div className="text-xs text-[color:var(--ui-muted)] flex flex-wrap gap-x-4 gap-y-1 mt-1">
+                <span><strong>Comorbidity:</strong> CKD Stage 3 + Type 2 Diabetes</span>
+                <span>•</span>
+                <span><strong>Triggered:</strong> Telemetry Rule G-32</span>
+              </div>
+            </div>
+          </div>
+        </CardHeader>
+      </Card>
+
+      {/* AI SUMMARY SECTION */}
+      <Card className="overflow-hidden border-[color:var(--ui-border)] bg-[linear-gradient(135deg,rgba(25,163,154,0.08),rgba(11,101,116,0.03))]">
+        <CardHeader className="p-4 sm:p-6 pb-2">
+          <div className="flex items-center gap-2">
+            <Badge variant="default" className="text-xs font-semibold">
+              ✨ AI Summary
+            </Badge>
+            <CardDescription className="text-xs text-[color:var(--ui-muted)]">
+              Based on 30-day care signals
+            </CardDescription>
+          </div>
+          <CardTitle className="text-lg font-bold mt-2">
+            30-Day Health Trend Analysis
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-4 sm:p-6 pt-0">
+          <p className="text-sm leading-7 text-[color:var(--ui-text)]">
+            Your metrics show a gradual, persistent increase in blood glucose and a corresponding rise in systolic blood pressure over the past 30 days. In the context of your comorbid CKD and Type 2 Diabetes, these trends suggest that current self-management targets may need review. We suggest noting these patterns and considering discussing them with your care team at your next visit.
+          </p>
+        </CardContent>
+      </Card>
+
       <Card className="overflow-hidden">
         <CardHeader className="gap-3 border-b border-[color:var(--ui-border)] bg-[linear-gradient(135deg,rgba(25,163,154,0.08),rgba(11,101,116,0.03))]">
           <div className="flex flex-wrap items-start justify-between gap-4">
