@@ -23,7 +23,8 @@ export type AlertStatus =
 export type AlertSource =
   | "rules_engine"
   | "manual"
-  | "system";
+  | "system"
+  | "demo";
 
 /* -------------------------------------------------------------------------- */
 /*                                  Alert                                     */

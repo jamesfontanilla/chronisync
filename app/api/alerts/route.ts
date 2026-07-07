@@ -20,7 +20,7 @@ import {
 import { logger } from "@/lib/logger";
 import { type AlertCreateInput, type AlertUpdateInput } from "@/services/alert.service";
 
-const alertSourceSchema = z.enum(["rules_engine", "manual", "system"]);
+const alertSourceSchema = z.enum(["rules_engine", "manual", "system", "demo"]);
 
 const alertCreateBodySchema = z.object({
   patientId: z.string().trim().min(1, "Patient ID is required."),

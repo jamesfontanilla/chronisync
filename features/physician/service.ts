@@ -123,6 +123,12 @@ function createDemoPatients(
 function createDemoAlerts(
   physicianId: string
 ): Alert[] {
+  // NOTE: These are hand-authored seed objects used only when no real patients
+  // exist in Firestore (i.e. the live workspace snapshot returns nothing and the
+  // demo fallback is shown). They use source: "demo" to distinguish them from
+  // actual engine output. Once a real patient logs a vital that triggers
+  // evaluateClinicalRules(), those findings are persisted with source:
+  // "rules_engine" and will replace these fixtures in the physician view.
   return [
     {
       id: "alert-bp-1",
@@ -132,7 +138,7 @@ function createDemoAlerts(
       message: "Blood pressure exceeded the configured threshold.",
       level: "warning",
       status: "open",
-      source: "rules_engine",
+      source: "demo",
       ruleId: "blood_pressure.high",
       metric: "blood_pressure",
       threshold: "140/90 mmHg",
@@ -140,6 +146,7 @@ function createDemoAlerts(
       notes: "Review recent blood pressure trend and follow up.",
       metadata: {
         alertFamily: "guideline",
+        isDemo: true,
       },
       createdAt: createTimestamp(1),
       updatedAt: createTimestamp(1),
@@ -152,7 +159,7 @@ function createDemoAlerts(
       message: "Blood glucose is above the fasting threshold.",
       level: "warning",
       status: "acknowledged",
-      source: "rules_engine",
+      source: "demo",
       ruleId: "blood_glucose.high",
       metric: "blood_glucose",
       threshold: ">= 126 mg/dL",
@@ -162,6 +169,7 @@ function createDemoAlerts(
       acknowledgedAt: createTimestamp(1),
       metadata: {
         alertFamily: "guideline",
+        isDemo: true,
       },
       createdAt: createTimestamp(2),
       updatedAt: createTimestamp(1),
@@ -174,7 +182,7 @@ function createDemoAlerts(
       message: "A medication combination may warrant a closer review.",
       level: "warning",
       status: "open",
-      source: "system",
+      source: "demo",
       ruleId: "medication_interaction.major",
       metric: "medication_interaction",
       threshold: "No known interaction",
@@ -182,6 +190,7 @@ function createDemoAlerts(
       notes: "Review the active regimen before the next refill is issued.",
       metadata: {
         alertFamily: "interaction",
+        isDemo: true,
       },
       createdAt: createTimestamp(1),
       updatedAt: createTimestamp(1),
@@ -194,7 +203,7 @@ function createDemoAlerts(
       message: "Three medication doses were missed this week.",
       level: "critical",
       status: "open",
-      source: "rules_engine",
+      source: "demo",
       ruleId: "medication_adherence.critical",
       metric: "medication_adherence",
       threshold: ">= 75% adherence",
@@ -202,6 +211,7 @@ function createDemoAlerts(
       notes: "Patient should be contacted to review missed doses.",
       metadata: {
         alertFamily: "guideline",
+        isDemo: true,
       },
       createdAt: createTimestamp(0),
       updatedAt: createTimestamp(0),

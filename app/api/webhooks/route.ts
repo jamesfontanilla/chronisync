@@ -29,7 +29,7 @@ const alertPayloadSchema = z.object({
   message: z.string().trim().min(1, "Message is required."),
   level: alertLevelSchema,
   status: alertStatusSchema.default("open"),
-  source: z.enum(["rules_engine", "manual", "system"]).default("system"),
+  source: z.enum(["rules_engine", "manual", "system", "demo"]).default("system"),
   ruleId: z.string().trim().optional(),
   metric: z.string().trim().optional(),
   threshold: z.string().trim().optional(),
