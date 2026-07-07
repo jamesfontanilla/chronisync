@@ -7,7 +7,7 @@ export default function DiaryLoading() {
         <div className="h-4 w-full max-w-2xl animate-pulse rounded-full bg-[color:var(--ui-border)]" />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
         <div className="h-32 animate-pulse rounded-[1.5rem] border border-[color:var(--ui-border)] bg-[color:var(--ui-surface)]" />
         <div className="h-32 animate-pulse rounded-[1.5rem] border border-[color:var(--ui-border)] bg-[color:var(--ui-surface)]" />
         <div className="h-32 animate-pulse rounded-[1.5rem] border border-[color:var(--ui-border)] bg-[color:var(--ui-surface)]" />

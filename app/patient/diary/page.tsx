@@ -124,23 +124,10 @@ export default function PatientDiaryPage() {
             {formatDateTime(summary?.lastUpdated ?? new Date())}
           </span>
         }
-        actions={
-          <div className="flex flex-wrap gap-3">
-            <Button asChild variant="glass">
-              <Link href="/patient/add#voice-first">Voice log</Link>
-            </Button>
-            <Button asChild variant="secondary">
-              <Link href="/patient/partners">Caregiver support</Link>
-            </Button>
-            <Button asChild variant="glass">
-              <Link href="/patient/add">Quick add</Link>
-            </Button>
-          </div>
-        }
         level={1}
       />
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="grid grid-cols-[repeat(2,9.5rem)] gap-3 xl:grid-cols-[repeat(4,9.5rem)]">
         {[
           {
             label: "Quick logs",
@@ -170,7 +157,7 @@ export default function PatientDiaryPage() {
           const Icon = item.icon;
 
           return (
-            <Card key={item.label}>
+            <Card key={item.label} className="h-64">
               <CardHeader className="flex-row items-start justify-between gap-4">
                 <div className="grid gap-2">
                   <p className="m-0 text-sm text-[color:var(--ui-muted)]">

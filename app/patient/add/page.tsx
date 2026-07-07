@@ -141,12 +141,12 @@ export default function PatientAddPage() {
         </Card>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="grid grid-cols-2 gap-4 xl:grid-cols-4">
         {captureModes.map((mode) => {
           const Icon = mode.icon;
 
           return (
-            <Card key={mode.title}>
+            <Card key={mode.title} className="flex flex-col self-stretch">
               <CardHeader className="gap-3">
                 <div className="flex items-center justify-between gap-3">
                   <CardTitle className="text-lg">{mode.title}</CardTitle>
@@ -158,15 +158,15 @@ export default function PatientAddPage() {
                   {mode.description}
                 </div>
               </CardHeader>
-              <CardContent className="pt-0">
+              <CardContent className="mt-auto pt-0">
                 <Button
                   asChild
                   variant="glass"
-                  className="w-full justify-between"
+                  className="h-auto w-full justify-between whitespace-normal rounded-2xl px-3 py-3 text-left"
                 >
                   <Link href={mode.href}>
                     <span>{mode.cta}</span>
-                    <PlusCircle size={16} aria-hidden="true" />
+                    <PlusCircle size={16} aria-hidden="true" className="shrink-0" />
                   </Link>
                 </Button>
               </CardContent>
