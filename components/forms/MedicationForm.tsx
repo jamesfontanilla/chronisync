@@ -49,6 +49,11 @@ const selectOptions = {
     { value: "completed", label: "Completed" },
     { value: "discontinued", label: "Discontinued" },
   ],
+  recordedByRole: [
+    { value: "patient", label: "Patient" },
+    { value: "caregiver", label: "Caregiver" },
+    { value: "clinician", label: "Clinician" },
+  ],
 } as const;
 
 export interface MedicationFormProps {
@@ -183,6 +188,21 @@ export function MedicationForm({ defaultValues }: MedicationFormProps) {
               <Input id="startDate" type="date" {...form.register("startDate")} />
             </label>
           </div>
+
+          <label className="grid gap-2">
+            <Label htmlFor="recordedByRole">Logged by</Label>
+            <select
+              id="recordedByRole"
+              className={controlClassName}
+              {...form.register("recordedByRole")}
+            >
+              {selectOptions.recordedByRole.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
 
           <label className="grid gap-2">
             <Label htmlFor="endDate">End date</Label>

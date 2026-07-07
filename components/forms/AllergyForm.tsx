@@ -38,6 +38,11 @@ const selectOptions = {
     { value: "active", label: "Active" },
     { value: "resolved", label: "Resolved" },
   ],
+  recordedByRole: [
+    { value: "patient", label: "Patient" },
+    { value: "caregiver", label: "Caregiver" },
+    { value: "clinician", label: "Clinician" },
+  ],
 } as const;
 
 export interface AllergyFormProps {
@@ -134,6 +139,21 @@ export function AllergyForm({ defaultValues }: AllergyFormProps) {
               </select>
             </label>
           </div>
+
+          <label className="grid gap-2">
+            <Label htmlFor="recordedByRole">Logged by</Label>
+            <select
+              id="recordedByRole"
+              className={controlClassName}
+              {...form.register("recordedByRole")}
+            >
+              {selectOptions.recordedByRole.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
 
           <label className="grid gap-2">
             <Label htmlFor="reaction">Reaction</Label>

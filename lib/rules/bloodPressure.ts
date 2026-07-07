@@ -14,6 +14,12 @@ import {
   formatClinicalNumber,
   type ClinicalRuleFinding,
 } from "./alerts";
+import {
+  analyzeNumericTrend,
+  buildTrendAnalysisMetadata,
+  describeTrendDirection,
+  type TrendAnalysis,
+} from "./trendEngine";
 
 const BLOOD_PRESSURE_RULE_IDS = {
   HIGH: "blood_pressure.high",
@@ -113,7 +119,8 @@ function summarizeBloodPressureWindow(
 
 function buildBloodPressureTrendFinding(
   summary: BloodPressureWindowSummary,
-  physicianId: string | undefined
+  physicianId: string | undefined,
+  trendAnalysis?: TrendAnalysis | null
 ): ClinicalRuleFinding | null {
   if (summary.highReadings === 0 && summary.severeReadings === 0) {
     return null;
@@ -123,6 +130,9 @@ function buildBloodPressureTrendFinding(
     summary.severeReadings > 0 ||
     summary.averageSystolic >= 160 ||
     summary.averageDiastolic >= 100;
+  const trendDirectionLabel = trendAnalysis
+    ? describeTrendDirection(trendAnalysis.direction)
+    : undefined;
 
   return {
     patientId: summary.readings[0]?.patientId ?? "",
@@ -137,7 +147,9 @@ function buildBloodPressureTrendFinding(
         ? "Sustained High Blood Pressure Alert"
         : "Persistently High Blood Pressure Alert",
     message:
-      "The blood pressure window is staying elevated across repeated readings.",
+      trendAnalysis && trendAnalysis.direction !== "steady"
+        ? `The blood pressure window is staying elevated with a ${trendDirectionLabel} trend across repeated readings.`
+        : "The blood pressure window is staying elevated across repeated readings.",
     level: isCritical ? "critical" : "warning",
     metric: VITAL_TYPES.BLOOD_PRESSURE,
     threshold: `Rolling average below ${formatClinicalNumber(
@@ -163,6 +175,11 @@ function buildBloodPressureTrendFinding(
       severeReadings: summary.severeReadings,
       averageSystolic: summary.averageSystolic,
       averageDiastolic: summary.averageDiastolic,
+      ...(trendAnalysis
+        ? {
+            trendAnalysis: buildTrendAnalysisMetadata(trendAnalysis),
+          }
+        : {}),
     },
   };
 }
@@ -285,7 +302,18 @@ export function evaluateBloodPressureTrendRules(
       continue;
     }
 
-    const finding = buildBloodPressureTrendFinding(summary, physicianId);
+    const trendAnalysis = analyzeNumericTrend(
+      summary.readings.map((reading) => ({
+        recordedAt: reading.recordedAt,
+        value: reading.systolic,
+      }))
+    );
+
+    const finding = buildBloodPressureTrendFinding(
+      summary,
+      physicianId,
+      trendAnalysis
+    );
 
     if (finding) {
       findings.push(finding);

@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   vitalSourceSchema,
 } from "@/schemas/vital";
+import { RECORD_ORIGIN_ROLES } from "@/types/provenance";
 
 const emptyToUndefined = (value: unknown) => {
   if (typeof value !== "string") {
@@ -23,6 +24,8 @@ const optionalSource = z.preprocess(
   vitalSourceSchema.optional()
 );
 
+const recordedByRoleSchema = z.enum(RECORD_ORIGIN_ROLES).default("patient");
+
 const requiredNumberText = z
   .string()
   .trim()
@@ -40,6 +43,7 @@ const patientIdSchema = z
 
 const bloodPressureFormSchema = z.object({
   patientId: patientIdSchema,
+  recordedByRole: recordedByRoleSchema,
   type: z.literal("blood_pressure"),
   systolic: requiredNumberText,
   diastolic: requiredNumberText,
@@ -58,6 +62,7 @@ const numericVitalTypeSchema = z.enum([
 
 const numericVitalFormSchema = z.object({
   patientId: patientIdSchema,
+  recordedByRole: recordedByRoleSchema,
   type: numericVitalTypeSchema,
   value: requiredNumberText,
   recordedAt: requiredDateText,

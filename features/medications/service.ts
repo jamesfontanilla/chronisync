@@ -48,6 +48,7 @@ export function buildMedicationCreateInput(
 
   return {
     patientId: values.patientId.trim(),
+    recordedByRole: values.recordedByRole,
     name: values.name.trim(),
     dosage: values.dosage.trim(),
     frequency: values.frequency,

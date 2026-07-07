@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { RECORD_ORIGIN_ROLES } from "@/types/provenance";
+
 const emptyToUndefined = (value: unknown) => {
   if (typeof value !== "string") {
     return value;
@@ -13,6 +15,8 @@ const optionalText = z.preprocess(
   emptyToUndefined,
   z.string().trim().optional()
 );
+
+const recordedByRoleSchema = z.enum(RECORD_ORIGIN_ROLES).default("patient");
 
 export const diaryEntryTypeSchema = z.enum([
   "glucose",
@@ -42,6 +46,7 @@ export const diarySyncStateSchema = z.enum([
 
 export const diaryEntryFormSchema = z.object({
   patientId: z.string().trim().min(1, "Patient ID is required."),
+  recordedByRole: recordedByRoleSchema,
   type: diaryEntryTypeSchema,
   title: z.string().trim().min(1, "Title is required."),
   content: z.string().trim().min(1, "Content is required."),

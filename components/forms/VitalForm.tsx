@@ -36,6 +36,12 @@ const sourceOptions = [
   { value: "imported", label: "Imported" },
 ] as const;
 
+const recordedByRoleOptions = [
+  { value: "patient", label: "Patient" },
+  { value: "caregiver", label: "Caregiver" },
+  { value: "clinician", label: "Clinician" },
+] as const;
+
 const numericLabels: Record<
   Exclude<VitalFormValues["type"], "blood_pressure">,
   { label: string; placeholder: string }
@@ -141,6 +147,21 @@ export function VitalForm({ defaultValues }: VitalFormProps) {
               </select>
             </label>
           </div>
+
+          <label className="grid gap-2">
+            <Label htmlFor="recordedByRole">Logged by</Label>
+            <select
+              id="recordedByRole"
+              className={controlClassName}
+              {...form.register("recordedByRole")}
+            >
+              {recordedByRoleOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
 
           {isBloodPressure ? (
             <div className="grid gap-4 md:grid-cols-2">

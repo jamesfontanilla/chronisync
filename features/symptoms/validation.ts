@@ -5,6 +5,7 @@ import {
   symptomSeveritySchema,
   symptomStatusSchema,
 } from "@/schemas/symptom";
+import { RECORD_ORIGIN_ROLES } from "@/types/provenance";
 
 const emptyToUndefined = (value: unknown) => {
   if (typeof value !== "string") {
@@ -25,11 +26,14 @@ const optionalFrequency = z.preprocess(
   symptomFrequencySchema.optional()
 );
 
+const recordedByRoleSchema = z.enum(RECORD_ORIGIN_ROLES).default("patient");
+
 export const symptomFormSchema = z.object({
   patientId: z
     .string()
     .trim()
     .min(1, "Patient ID is required."),
+  recordedByRole: recordedByRoleSchema,
   name: z
     .string()
     .trim()

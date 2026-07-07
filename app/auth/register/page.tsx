@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { ROUTES } from "@/config/route";
 import { useAuth } from "@/hooks/useAuth";
 import { getRedirectPathForRole } from "@/lib/auth/guards";
-import { ROLES } from "@/lib/auth/roles";
+import { isAuthRole, ROLES } from "@/lib/auth/roles";
 import {
   useAuthRoleOptions,
   useRegisterForm,
@@ -107,9 +107,15 @@ const optionStyle = {
 
 export default function RegisterPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const roleParam = searchParams.get("role");
   const { user, role, isLoading, register } = useAuth();
   const defaultRole =
-    role === ROLES.PHYSICIAN ? role : ROLES.PATIENT;
+    role === ROLES.PHYSICIAN
+      ? role
+      : isAuthRole(roleParam)
+        ? roleParam
+        : ROLES.PATIENT;
   const form = useRegisterForm(defaultRole);
   const roleOptions = useAuthRoleOptions();
   const [submitError, setSubmitError] = useState<string | null>(null);

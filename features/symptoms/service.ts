@@ -30,6 +30,7 @@ export function buildSymptomCreateInput(
 
   return {
     patientId: values.patientId.trim(),
+    recordedByRole: values.recordedByRole,
     name: values.name.trim(),
     severity: values.severity,
     status: values.status,

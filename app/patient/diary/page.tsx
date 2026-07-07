@@ -88,6 +88,9 @@ function DiaryEntryCard({ entry }: { entry: DiaryEntry }) {
         </p>
         <div className="flex flex-wrap gap-2">
           <Badge variant="outline">{humanize(entry.source)}</Badge>
+          <Badge variant="secondary">
+            Logged by {humanize(entry.recordedByRole ?? "patient")}
+          </Badge>
           {entry.tags?.map((tag) => (
             <Badge key={tag} variant="glass">
               {tag}

@@ -5,6 +5,8 @@
  * =============================================================================
  */
 
+import type { RecordOriginRole } from "@/types/provenance";
+
 /* -------------------------------------------------------------------------- */
 /*                              Enumerations                                  */
 /* -------------------------------------------------------------------------- */
@@ -45,6 +47,11 @@ export interface Medication {
    * Associated patient UID.
    */
   patientId: string;
+
+  /**
+   * Role of the person who recorded the medication log.
+   */
+  recordedByRole?: RecordOriginRole;
 
   /**
    * Physician or clinician UID who prescribed the medication.

@@ -47,6 +47,7 @@ export function buildAllergyRecord(
 
   return {
     ...data,
+    recordedByRole: data.recordedByRole ?? "patient",
     id: createRecordId(),
     createdAt: timestamp,
     updatedAt: timestamp,

@@ -5,6 +5,8 @@
  * =============================================================================
  */
 
+import type { RecordOriginRole } from "@/types/provenance";
+
 /* -------------------------------------------------------------------------- */
 /*                              Enumerations                                  */
 /* -------------------------------------------------------------------------- */
@@ -92,6 +94,11 @@ export interface Symptom {
    * UID of the user who recorded the symptom.
    */
   recordedBy?: string;
+
+  /**
+   * Role of the user who recorded the symptom.
+   */
+  recordedByRole?: RecordOriginRole;
 
   /**
    * Creation timestamp.

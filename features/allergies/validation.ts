@@ -5,6 +5,7 @@ import {
   allergyStatusSchema,
   allergyTypeSchema,
 } from "@/schemas/allergy";
+import { RECORD_ORIGIN_ROLES } from "@/types/provenance";
 
 const emptyToUndefined = (value: unknown) => {
   if (typeof value !== "string") {
@@ -20,6 +21,8 @@ const optionalText = z.preprocess(
   z.string().trim().optional()
 );
 
+const recordedByRoleSchema = z.enum(RECORD_ORIGIN_ROLES).default("patient");
+
 export const allergyFormSchema = z.object({
   patientId: z
     .string()
@@ -29,6 +32,7 @@ export const allergyFormSchema = z.object({
     .string()
     .trim()
     .min(1, "Allergen is required."),
+  recordedByRole: recordedByRoleSchema,
   type: allergyTypeSchema,
   severity: allergySeveritySchema,
   status: allergyStatusSchema,

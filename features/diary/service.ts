@@ -75,6 +75,7 @@ function normalizeDate(value: unknown): Date {
 function normalizeEntry(entry: DiaryEntry): DiaryEntry {
   return {
     ...entry,
+    recordedByRole: entry.recordedByRole ?? "patient",
     recordedAt: normalizeDate(entry.recordedAt),
     createdAt: normalizeDate(entry.createdAt),
     updatedAt: normalizeDate(entry.updatedAt),
@@ -93,6 +94,7 @@ function matchesQuery(entry: DiaryEntry, query: string): boolean {
     entry.content,
     entry.valueLabel,
     entry.source,
+    entry.recordedByRole,
     entry.syncState,
     ...(entry.tags ?? []),
   ]
@@ -110,6 +112,7 @@ function createDemoEntries(
     {
       id: "diary-glucose-1",
       patientId,
+      recordedByRole: "patient",
       type: "glucose",
       title: "Morning glucose check",
       content: "Fasting reading taken before breakfast. No symptoms reported.",
@@ -124,6 +127,7 @@ function createDemoEntries(
     {
       id: "diary-pressure-1",
       patientId,
+      recordedByRole: "patient",
       type: "pressure",
       title: "Blood pressure log",
       content: "Measured after a short rest before leaving the house.",
@@ -138,6 +142,7 @@ function createDemoEntries(
     {
       id: "diary-weight-1",
       patientId,
+      recordedByRole: "patient",
       type: "weight",
       title: "Daily weight",
       content: "Recorded after waking up and using the restroom.",
@@ -152,6 +157,7 @@ function createDemoEntries(
     {
       id: "diary-medication-1",
       patientId,
+      recordedByRole: "patient",
       type: "medication",
       title: "Medication reminder",
       content: "Metformin and amlodipine marked as taken after breakfast.",
@@ -166,6 +172,7 @@ function createDemoEntries(
     {
       id: "diary-diet-1",
       patientId,
+      recordedByRole: "patient",
       type: "diet",
       title: "Lunch meal photo",
       content: "Chicken adobo with rice, confirmed after a quick edit.",
@@ -180,6 +187,7 @@ function createDemoEntries(
     {
       id: "diary-exercise-1",
       patientId,
+      recordedByRole: "patient",
       type: "exercise",
       title: "Evening walk",
       content: "A 20-minute walk after dinner to keep the routine steady.",
@@ -194,6 +202,7 @@ function createDemoEntries(
     {
       id: "diary-voice-1",
       patientId,
+      recordedByRole: "patient",
       type: "voice_note",
       title: "Voice note",
       content: "Feeling less tired after lunch, but still need to restock strips.",
@@ -207,6 +216,7 @@ function createDemoEntries(
     {
       id: "diary-note-1",
       patientId,
+      recordedByRole: "caregiver",
       type: "note",
       title: "Caregiver update",
       content: "Caregiver confirmed the refill pickup and tomorrow's follow-up.",
@@ -264,6 +274,7 @@ export function buildDiaryRecord(
   const record: DiaryEntry = {
     id: createRecordId(),
     patientId: data.patientId.trim(),
+    recordedByRole: data.recordedByRole ?? "patient",
     type: data.type,
     title: data.title.trim(),
     content: data.content.trim(),
