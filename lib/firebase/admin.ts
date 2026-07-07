@@ -78,12 +78,16 @@ export function getAdminApp(): App {
 
   const config = getAdminConfig();
   const options: AppOptions = {
-    credential: cert({
+    projectId: config.projectId,
+  };
+  
+  if (process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+    options.credential = cert({
       projectId: config.projectId,
       clientEmail: config.clientEmail,
       privateKey: config.privateKey,
-    }),
-  };
+    });
+  }
 
   if (config.storageBucket) {
     options.storageBucket = config.storageBucket;

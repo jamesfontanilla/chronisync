@@ -118,9 +118,101 @@ export function buildPatientDashboardSnapshot(
         direction: pendingUploads > 0 ? "steady" : "up",
       },
     ],
-    trends: [],
+    trends: [
+      {
+        title: "Blood pressure",
+        description: "Recent home and clinic readings",
+        color: "#0b6574",
+        points: [
+          { label: "Mon", value: 148 },
+          { label: "Tue", value: 142 },
+          { label: "Wed", value: 138 },
+          { label: "Thu", value: 140 },
+          { label: "Fri", value: 136 },
+          { label: "Sat", value: 134 },
+          { label: "Sun", value: 132 },
+        ],
+      },
+      {
+        title: "Glucose",
+        description: "Fasting trend snapshot",
+        color: "#19a39a",
+        points: [
+          { label: "Mon", value: 158 },
+          { label: "Tue", value: 150 },
+          { label: "Wed", value: 144 },
+          { label: "Thu", value: 139 },
+          { label: "Fri", value: 136 },
+          { label: "Sat", value: 132 },
+          { label: "Sun", value: 128 },
+        ],
+      },
+    ],
     generatedAt: new Date(),
   });
 }
 
-export const defaultDashboardSnapshot: DashboardSnapshot = buildPatientDashboardSnapshot();
+export const defaultDashboardSnapshot: DashboardSnapshot = buildPatientDashboardSnapshot({
+  alerts: [
+    {
+      id: "alert-1",
+      patientId: "patient-1",
+      physicianId: "physician-1",
+      title: "High Blood Pressure",
+      message: "Blood pressure is elevated.",
+      level: "warning",
+      status: "open",
+      source: "demo",
+      ruleId: "bp.high",
+      metric: "blood_pressure",
+      threshold: "140/90",
+      actualValue: "148/92",
+      metadata: { alertFamily: "guideline", isDemo: true },
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }
+  ],
+  vitals: [
+    {
+      id: "vital-1",
+      patientId: "patient-1",
+      type: "blood_pressure",
+      systolic: 130,
+      diastolic: 80,
+      unit: "mmHg",
+      recordedAt: new Date(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      source: "manual"
+    },
+    {
+      id: "vital-2",
+      patientId: "patient-1",
+      type: "blood_pressure",
+      systolic: 135,
+      diastolic: 85,
+      unit: "mmHg",
+      recordedAt: new Date(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      source: "manual"
+    }
+  ],
+  documents: [
+    {
+      id: "doc-1",
+      patientId: "patient-1",
+      title: "Lab Results",
+      fileName: "labs.pdf",
+      filePath: "labs.pdf",
+      contentType: "application/pdf",
+      sizeBytes: 1024,
+      category: "lab_result",
+      status: "review_required",
+      source: "patient_upload",
+      uploadedBy: "patient-1",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }
+  ]
+});
