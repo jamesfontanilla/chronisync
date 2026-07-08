@@ -58,16 +58,6 @@ export default function PatientAddPage() {
         title="Add"
         description="This quick-capture hub keeps large tap targets, plain labels, and a manual fallback path in reach."
         meta={<span>Photo drafts, voice notes, and quick logs</span>}
-        actions={
-          <div className="flex flex-wrap gap-3">
-            <Button asChild variant="glass">
-              <Link href="#voice-first">Voice log</Link>
-            </Button>
-            <Button asChild variant="secondary">
-              <Link href="/patient/partners">Caregiver support</Link>
-            </Button>
-          </div>
-        }
         level={1}
       />
 
@@ -175,7 +165,7 @@ export default function PatientAddPage() {
         })}
       </section>
 
-      <QuickLogTiles />
+      <QuickLogTiles showShortcuts={false} />
 
       <section className="grid gap-6 xl:grid-cols-2">
         <MealPhotoCaptureCard patientId="demo-patient" />

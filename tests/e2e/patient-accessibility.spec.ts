@@ -20,15 +20,15 @@ test("patient add page exposes keyboard-friendly quick log actions", async ({
     "href",
     "/patient/medications"
   );
-  await expect(page.getByRole("link", { name: "Start voice log" })).toHaveAttribute(
+  await expect(page.getByRole("link", { name: "Jump to voice log" })).toHaveAttribute(
     "href",
-    "/patient/diary"
+    "#voice-first"
   );
   await expect(
     page.getByRole("link", { name: "Open caregiver support" })
   ).toHaveAttribute("href", "/patient/partners");
 
-  await page.getByRole("link", { name: "Start voice log" }).press("Enter");
+  await page.getByRole("link", { name: "Jump to voice log" }).press("Enter");
   await expect(page.getByRole("heading", { name: "Voice-first logging" })).toBeVisible();
 });
 
