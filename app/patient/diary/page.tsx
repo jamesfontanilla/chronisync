@@ -9,6 +9,7 @@ import {
   SquareCheckBig,
 } from "lucide-react";
 
+import { AddWrittenEntryDialog } from "@/components/patient-mobile/AddWrittenEntryDialog";
 import { DiaryFilters, type DiaryFilterValue } from "@/components/patient-mobile/DiaryFilters";
 import { QuickLogTiles } from "@/components/patient-mobile/QuickLogTiles";
 import { PageHeader } from "@/components/common/PageHeader";
@@ -124,6 +125,7 @@ export default function PatientDiaryPage() {
             {formatDateTime(summary?.lastUpdated ?? new Date())}
           </span>
         }
+        actions={<AddWrittenEntryDialog />}
         level={1}
       />
 
