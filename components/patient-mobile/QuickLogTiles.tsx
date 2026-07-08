@@ -121,89 +121,97 @@ const shortcuts = [
 export interface QuickLogTilesProps {
   className?: string;
   showShortcuts?: boolean;
+  showQuickCapture?: boolean;
 }
 
 export function QuickLogTiles({
   className,
   showShortcuts = true,
+  showQuickCapture = true,
 }: QuickLogTilesProps) {
   return (
     <section className={className}>
       <Card className="overflow-hidden">
-        <CardHeader className="gap-2">
-          <div className="text-xs uppercase tracking-[0.24em] text-[color:var(--ui-muted)]">
-            Quick capture
-          </div>
-          <CardTitle className="text-2xl">Log from the shortest path.</CardTitle>
-          <p className="m-0 text-sm leading-7 text-[color:var(--ui-muted)]">
-            The quick-log row keeps the most common actions visible so the
-            patient can capture a moment without diving through menus. Every
-            tile and shortcut now opens a real page or anchor with keyboard and
-            touch-friendly buttons.
-          </p>
-        </CardHeader>
-        <CardContent className="grid gap-4">
-          <div className="grid grid-cols-2 gap-3" role="list" aria-label="Quick log actions">
-            {quickLogTiles.map((tile) => {
-              const Icon = tile.icon;
+        {showQuickCapture ? (
+          <CardHeader className="gap-2">
+            <div className="text-xs uppercase tracking-[0.24em] text-[color:var(--ui-muted)]">
+              Quick capture
+            </div>
+            <CardTitle className="text-2xl">Log from the shortest path.</CardTitle>
+            <p className="m-0 text-sm leading-7 text-[color:var(--ui-muted)]">
+              The quick-log row keeps the most common actions visible so the
+              patient can capture a moment without diving through menus. Every
+              tile and shortcut now opens a real page or anchor with keyboard and
+              touch-friendly buttons.
+            </p>
+          </CardHeader>
+        ) : null}
+        <CardContent className={showQuickCapture ? "grid gap-4" : "grid gap-4 pt-6"}>
+          {showQuickCapture ? (
+            <div className="grid grid-cols-2 gap-2" role="list" aria-label="Quick log actions">
+              {quickLogTiles.map((tile) => {
+                const Icon = tile.icon;
 
-              return (
-                <article
-                  key={tile.title}
-                  className="grid gap-3 rounded-[1.5rem] border border-[color:var(--ui-border)] bg-[color:var(--ui-surface-strong)] p-4 shadow-[0_10px_30px_rgba(9,30,36,0.08)]"
-                  role="listitem"
-                >
-                  <div
-                    className={`grid h-12 w-12 place-items-center rounded-2xl border border-[color:var(--ui-border)] bg-gradient-to-br ${tile.tone} text-[color:var(--ui-accent)]`}
+                return (
+                  <article
+                    key={tile.title}
+                    className="grid grid-cols-1 gap-2 rounded-[1.15rem] border border-[color:var(--ui-border)] bg-[color:var(--ui-surface-strong)] p-3 shadow-[0_10px_30px_rgba(9,30,36,0.08)]"
+                    role="listitem"
                   >
-                    <Icon size={18} />
-                  </div>
-                  <div className="grid gap-1">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <h3 className="m-0 text-base font-semibold">{tile.title}</h3>
-                      <Badge variant="outline">Quick log</Badge>
+                    <div
+                      className={`grid h-9 w-9 place-items-center rounded-xl border border-[color:var(--ui-border)] bg-gradient-to-br ${tile.tone} text-[color:var(--ui-accent)]`}
+                    >
+                      <Icon size={16} />
                     </div>
-                    <p className="m-0 text-sm leading-6 text-[color:var(--ui-muted)]">
-                      {tile.description}
-                    </p>
-                  </div>
-                  <Button
-                    asChild
-                    variant="secondary"
-                    className="h-auto min-h-12 w-full justify-between whitespace-normal rounded-[1.35rem] px-3 py-3 text-left"
-                  >
-                    <Link href={tile.href}>
-                      <span>{tile.cta}</span>
-                      <ArrowRight className="shrink-0" size={16} />
-                    </Link>
-                  </Button>
-                </article>
-              );
-            })}
-          </div>
+                    <div className="grid min-w-0 gap-0.5">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <h3 className="m-0 text-sm font-semibold">{tile.title}</h3>
+                        <Badge variant="outline" className="px-2 py-0.5">
+                          Quick log
+                        </Badge>
+                      </div>
+                      <p className="m-0 text-xs leading-5 text-[color:var(--ui-muted)]">
+                        {tile.description}
+                      </p>
+                    </div>
+                    <Button
+                      asChild
+                      variant="secondary"
+                      className="h-auto min-h-9 w-full justify-between whitespace-normal rounded-[0.9rem] px-3 py-2 text-left text-sm"
+                    >
+                      <Link href={tile.href}>
+                        <span className="min-w-0 break-words">{tile.cta}</span>
+                        <ArrowRight className="shrink-0" size={14} />
+                      </Link>
+                    </Button>
+                  </article>
+                );
+              })}
+            </div>
+          ) : null}
 
           {showShortcuts ? (
             <div className="grid gap-3">
               <div className="text-xs uppercase tracking-[0.24em] text-[color:var(--ui-muted)]">
                 Shortcuts
               </div>
-              <div className="grid gap-3 lg:grid-cols-2" role="list" aria-label="Quick log shortcuts">
+              <div className="grid gap-2 lg:grid-cols-2" role="list" aria-label="Quick log shortcuts">
                 {shortcuts.map((shortcut) => {
                   const Icon = shortcut.icon;
 
                   return (
                     <article
                       key={shortcut.title}
-                      className="grid gap-3 rounded-[1.25rem] border border-[color:var(--ui-border)] bg-[color:var(--ui-surface)] p-4"
+                      className="grid gap-2 rounded-[1rem] border border-[color:var(--ui-border)] bg-[color:var(--ui-surface)] p-3"
                       role="listitem"
                     >
-                      <div className="flex items-start gap-3">
-                        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-[color:var(--ui-border)] bg-[color:var(--ui-accent-soft)] text-[color:var(--ui-accent)]">
-                          <Icon size={18} />
+                      <div className="flex items-start gap-2">
+                        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-[color:var(--ui-border)] bg-[color:var(--ui-accent-soft)] text-[color:var(--ui-accent)]">
+                          <Icon size={16} />
                         </span>
-                        <div className="grid gap-1">
-                          <div className="font-medium">{shortcut.title}</div>
-                          <p className="m-0 text-sm leading-6 text-[color:var(--ui-muted)]">
+                        <div className="grid gap-0.5">
+                          <div className="text-sm font-medium">{shortcut.title}</div>
+                          <p className="m-0 text-xs leading-5 text-[color:var(--ui-muted)]">
                             {shortcut.description}
                           </p>
                         </div>
@@ -211,11 +219,11 @@ export function QuickLogTiles({
                       <Button
                         asChild
                         variant={shortcut.buttonVariant ?? "glass"}
-                        className="h-auto min-h-11 w-full justify-between rounded-[1.1rem] px-4 py-3 text-left"
+                        className="h-auto min-h-9 w-full justify-between rounded-[0.9rem] px-3 py-2 text-left text-sm"
                       >
                         <Link href={shortcut.href}>
-                          <span>{shortcut.cta}</span>
-                          <ArrowRight className="shrink-0" size={16} />
+                          <span className="min-w-0 break-words">{shortcut.cta}</span>
+                          <ArrowRight className="shrink-0" size={14} />
                         </Link>
                       </Button>
                     </article>

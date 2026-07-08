@@ -127,7 +127,7 @@ export default function PatientDiaryPage() {
         level={1}
       />
 
-      <section className="grid grid-cols-[repeat(2,9.5rem)] gap-3 xl:grid-cols-4">
+      <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         {[
           {
             label: "Quick logs",
@@ -157,7 +157,7 @@ export default function PatientDiaryPage() {
           const Icon = item.icon;
 
           return (
-            <Card key={item.label} className="h-64">
+            <Card key={item.label} className="flex h-full flex-col">
               <CardHeader className="flex-row items-start justify-between gap-4">
                 <div className="grid gap-2">
                   <p className="m-0 min-h-10 text-sm text-[color:var(--ui-muted)]">
@@ -177,7 +177,7 @@ export default function PatientDiaryPage() {
         })}
       </section>
 
-      <QuickLogTiles />
+      <QuickLogTiles showQuickCapture={false} />
 
       <DiaryFilters value={filter} onValueChange={setFilter} />
 
