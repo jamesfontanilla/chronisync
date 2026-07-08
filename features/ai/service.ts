@@ -1,17 +1,13 @@
 /**
  * =============================================================================
  * ChroniSync
- * AI Service
+ * AI Service – Gemini REST API (no SDK)
  * =============================================================================
+ *
+ * This service calls the Gemini REST endpoint directly via `fetch`.
+ * No `@google/genai` or `@google/generative-ai` required.
  */
 
-import {
-  GoogleGenAI,
-  createPartFromText,
-  createPartFromUri,
-  createUserContent,
-  type ContentListUnion,
-} from "@google/genai";
 import { AI_MODELS } from "@/lib/constants";
 
 import {
@@ -49,8 +45,6 @@ import {
 import { logger } from "@/lib/logger";
 import { AI_DRAFT_DISCLAIMER, compactAiMetadata } from "@/lib/ai/metadata";
 
-import { z, type ZodTypeAny } from "zod";
-
 /* -------------------------------------------------------------------------- */
 /*                               Environment                                  */
 /* -------------------------------------------------------------------------- */
@@ -62,11 +56,7 @@ function readEnv(name: string): string | undefined {
 
 function readBooleanEnv(name: string, fallback = true): boolean {
   const value = readEnv(name);
-
-  if (value === undefined) {
-    return fallback;
-  }
-
+  if (value === undefined) return fallback;
   return ["1", "true", "yes", "on"].includes(value.toLowerCase());
 }
 
@@ -74,27 +64,73 @@ function getGeminiModel(): string {
   return readEnv("GEMINI_MODEL") ?? AI_MODELS.DEFAULT;
 }
 
-/* -------------------------------------------------------------------------- */
-/*                                  Client                                    */
-/* -------------------------------------------------------------------------- */
 
-let cachedClient: GoogleGenAI | null = null;
 
-function getGeminiClient(): GoogleGenAI {
-  if (cachedClient) {
-    return cachedClient;
-  }
+const GEMINI_BASE_URL =
+  "https://generativelanguage.googleapis.com/v1beta/models";
 
+interface GeminiCallParams {
+  model: string;
+  systemInstruction?: string;
+  contents: unknown[];
+  responseJsonSchema?: Record<string, unknown>;
+  temperature?: number;
+  maxOutputTokens?: number;
+}
+
+async function callGeminiRest(params: GeminiCallParams): Promise<string> {
   const apiKey = readEnv("GEMINI_API_KEY");
-
   if (!apiKey) {
     throw new Error(
-      "GEMINI_API_KEY is not configured. Add it to your environment before using the AI service.",
+      "GEMINI_API_KEY is not configured. Add it to your environment before using the AI service."
     );
   }
 
-  cachedClient = new GoogleGenAI({ apiKey });
-  return cachedClient;
+  const url = `${GEMINI_BASE_URL}/${params.model}:generateContent?key=${apiKey}`;
+
+  const body: Record<string, unknown> = {
+    contents: params.contents,
+    generationConfig: {
+      temperature: params.temperature ?? 0.2,
+      maxOutputTokens: params.maxOutputTokens ?? 1200,
+      responseMimeType: "application/json",
+      ...(params.responseJsonSchema
+        ? { responseSchema: params.responseJsonSchema }
+        : {}),
+    },
+  };
+
+  if (params.systemInstruction) {
+    body['systemInstruction'] = { parts: [{ text: params.systemInstruction }] };
+  }
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 25_000);
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => "Unknown error");
+      throw new Error(`Gemini API error (${response.status}): ${errorText}`);
+    }
+
+    const data = await response.json();
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!text) {
+      throw new Error("Gemini returned an empty response.");
+    }
+    return text;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 /* -------------------------------------------------------------------------- */
@@ -103,11 +139,7 @@ function getGeminiClient(): GoogleGenAI {
 
 function stripJsonCodeFence(value: string): string {
   const trimmed = value.trim();
-
-  if (!trimmed.startsWith("```")) {
-    return trimmed;
-  }
-
+  if (!trimmed.startsWith("```")) return trimmed;
   return trimmed
     .replace(/^```(?:json)?\s*/i, "")
     .replace(/```$/i, "")
@@ -118,55 +150,9 @@ function parseJsonResponse(text: string): unknown {
   return JSON.parse(stripJsonCodeFence(text));
 }
 
-function createImageContent(
-  prompt: string,
-  imageUrl: string,
-  mimeType: string,
-): ContentListUnion {
-  return createUserContent([
-    createPartFromText(prompt),
-    createPartFromUri(imageUrl, mimeType),
-  ]);
-}
-
-async function generateStructuredJson<TSchema extends ZodTypeAny>(params: {
-  model: string;
-  systemInstruction: string;
-  contents: ContentListUnion;
-  responseJsonSchema: Record<string, unknown>;
-  validator: TSchema;
-  temperature: number;
-  maxOutputTokens: number;
-}): Promise<z.infer<TSchema>> {
-  const response = await getGeminiClient().models.generateContent({
-    model: params.model,
-    contents: params.contents,
-    config: {
-      systemInstruction: params.systemInstruction,
-      temperature: params.temperature,
-      maxOutputTokens: params.maxOutputTokens,
-      responseMimeType: "application/json",
-      responseJsonSchema: params.responseJsonSchema,
-    },
-  });
-
-  const text = response.text?.trim();
-
-  if (!text) {
-    throw new Error("Gemini returned an empty response.");
-  }
-
-  const parsed = params.validator.parse(parseJsonResponse(text));
-  return parsed;
-}
-
 function normalizeSourceText(sourceText: string, maxLength = 16_000): string {
   const normalized = sourceText.replace(/\r\n/g, "\n").trim();
-
-  if (normalized.length <= maxLength) {
-    return normalized;
-  }
-
+  if (normalized.length <= maxLength) return normalized;
   return `${normalized.slice(0, maxLength)}\n\n[Truncated for length]`;
 }
 
@@ -175,21 +161,25 @@ function normalizeSourceText(sourceText: string, maxLength = 16_000): string {
 /* -------------------------------------------------------------------------- */
 
 export async function analyzeFoodPhoto(
-  input: FoodPhotoAnalysisInput,
+  input: FoodPhotoAnalysisInput
 ): Promise<FoodPhotoAnalysisDraft> {
   if (!readBooleanEnv("ENABLE_AI_FOOD_PHOTO", true)) {
     throw new Error(
-      "AI food photo analysis is disabled. Set ENABLE_AI_FOOD_PHOTO=true to enable it.",
+      "AI food photo analysis is disabled. Set ENABLE_AI_FOOD_PHOTO=true to enable it."
     );
   }
 
   const validatedInput = foodPhotoAnalysisInputSchema.parse(input);
   const model = getGeminiModel();
+
+  // ✅ No more image download – use the base64 data directly
+  const mimeType = validatedInput.mimeType ?? "image/jpeg";
+
   const prompt = buildFoodPhotoAnalysisPrompt({
     patientId: validatedInput.patientId,
     ...(validatedInput.fileName ? { fileName: validatedInput.fileName } : {}),
     ...(validatedInput.mimeType ? { mimeType: validatedInput.mimeType } : {}),
-    ...(validatedInput.imageUrl ? { imageUrl: validatedInput.imageUrl } : {}),
+    // imageUrl is no longer part of the input; omit or leave undefined
     ...(validatedInput.mealTypeHint
       ? { mealTypeHint: validatedInput.mealTypeHint }
       : {}),
@@ -204,30 +194,29 @@ export async function analyzeFoodPhoto(
       : {}),
   });
 
-  const response = await getGeminiClient().models.generateContent({
+  const text = await callGeminiRest({
     model,
-    contents: createImageContent(
-      prompt,
-      validatedInput.imageUrl,
-      validatedInput.mimeType ?? "image/jpeg",
-    ),
-    config: {
-      systemInstruction: FOOD_PHOTO_ANALYSIS_SYSTEM_PROMPT,
-      temperature: 0.2,
-      maxOutputTokens: 1200,
-      responseMimeType: "application/json",
-      responseJsonSchema: FOOD_PHOTO_ANALYSIS_RESPONSE_JSON_SCHEMA as Record<
-        string,
-        unknown
-      >,
-    },
+    systemInstruction: FOOD_PHOTO_ANALYSIS_SYSTEM_PROMPT,
+    contents: [
+      {
+        parts: [
+          { text: prompt },
+          {
+            inlineData: {
+              mimeType,
+              data: validatedInput.imageBase64,   // ✅ base64 from client
+            },
+          },
+        ],
+      },
+    ],
+    responseJsonSchema: FOOD_PHOTO_ANALYSIS_RESPONSE_JSON_SCHEMA as Record<
+      string,
+      unknown
+    >,
+    temperature: 0.2,
+    maxOutputTokens: 1200,
   });
-
-  const text = response.text?.trim();
-
-  if (!text) {
-    throw new Error("Gemini returned an empty food photo response.");
-  }
 
   const parsed = foodPhotoAnalysisResponseSchema.parse(parseJsonResponse(text));
 
@@ -242,7 +231,7 @@ export async function analyzeFoodPhoto(
       patientId: validatedInput.patientId,
       fileName: validatedInput.fileName,
       mimeType: validatedInput.mimeType,
-      imageUrl: validatedInput.imageUrl,
+      // imageUrl is no longer available – keep the field out or set undefined
       mealTypeHint: validatedInput.mealTypeHint,
       mealLabelHint: validatedInput.mealLabelHint,
       portionHint: validatedInput.portionHint,
@@ -252,7 +241,6 @@ export async function analyzeFoodPhoto(
         kind: "food_photo_analysis",
         fileName: validatedInput.fileName,
         mimeType: validatedInput.mimeType,
-        imageUrl: validatedInput.imageUrl,
         mealTypeHint: validatedInput.mealTypeHint,
         mealLabelHint: validatedInput.mealLabelHint,
         portionHint: validatedInput.portionHint,
@@ -275,11 +263,11 @@ export async function analyzeFoodPhoto(
 /* -------------------------------------------------------------------------- */
 
 export async function extractClinicalDocument(
-  input: DocumentExtractionInput,
+  input: DocumentExtractionInput
 ): Promise<DocumentExtractionDraft> {
   if (!readBooleanEnv("ENABLE_AI_EXTRACTION", true)) {
     throw new Error(
-      "AI document extraction is disabled. Set ENABLE_AI_EXTRACTION=true to enable it.",
+      "AI document extraction is disabled. Set ENABLE_AI_EXTRACTION=true to enable it."
     );
   }
 
@@ -310,18 +298,21 @@ export async function extractClinicalDocument(
 
   const prompt = buildDocumentExtractionPrompt(promptInput);
 
-  const response = await generateStructuredJson({
+  const text = await callGeminiRest({
     model,
     systemInstruction: DOCUMENT_EXTRACTION_SYSTEM_PROMPT,
-    contents: prompt,
+    contents: [{ parts: [{ text: prompt }] }],
     responseJsonSchema: DOCUMENT_EXTRACTION_RESPONSE_JSON_SCHEMA as Record<
       string,
       unknown
     >,
-    validator: documentExtractionResponseSchema,
     temperature: 0.1,
-    maxOutputTokens: 1_800,
+    maxOutputTokens: 1800,
   });
+
+  const response = documentExtractionResponseSchema.parse(
+    parseJsonResponse(text)
+  );
 
   const draft = documentExtractionDraftSchema.parse({
     ...response,
@@ -389,11 +380,11 @@ export async function extractClinicalDocument(
 /* -------------------------------------------------------------------------- */
 
 export async function generateVisitSummary(
-  input: VisitSummaryInput,
+  input: VisitSummaryInput
 ): Promise<VisitSummaryDraft> {
   if (!readBooleanEnv("ENABLE_AI_SUMMARIZATION", true)) {
     throw new Error(
-      "AI visit summarization is disabled. Set ENABLE_AI_SUMMARIZATION=true to enable it.",
+      "AI visit summarization is disabled. Set ENABLE_AI_SUMMARIZATION=true to enable it."
     );
   }
 
@@ -427,18 +418,19 @@ export async function generateVisitSummary(
 
   const prompt = buildVisitSummaryPrompt(promptInput);
 
-  const response = await generateStructuredJson({
+  const text = await callGeminiRest({
     model,
     systemInstruction: VISIT_SUMMARY_SYSTEM_PROMPT,
-    contents: prompt,
+    contents: [{ parts: [{ text: prompt }] }],
     responseJsonSchema: VISIT_SUMMARY_RESPONSE_JSON_SCHEMA as Record<
       string,
       unknown
     >,
-    validator: visitSummaryResponseSchema,
     temperature: 0.2,
-    maxOutputTokens: 1_600,
+    maxOutputTokens: 1600,
   });
+
+  const response = visitSummaryResponseSchema.parse(parseJsonResponse(text));
 
   const draft = visitSummaryDraftSchema.parse({
     ...response,
