@@ -143,7 +143,7 @@ export function QuickLogTiles({
           </p>
         </CardHeader>
         <CardContent className="grid gap-4">
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3" role="list" aria-label="Quick log actions">
+          <div className="grid grid-cols-2 gap-3" role="list" aria-label="Quick log actions">
             {quickLogTiles.map((tile) => {
               const Icon = tile.icon;
 
@@ -159,7 +159,7 @@ export function QuickLogTiles({
                     <Icon size={18} />
                   </div>
                   <div className="grid gap-1">
-                    <div className="flex items-center justify-between gap-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
                       <h3 className="m-0 text-base font-semibold">{tile.title}</h3>
                       <Badge variant="outline">Quick log</Badge>
                     </div>
@@ -170,7 +170,7 @@ export function QuickLogTiles({
                   <Button
                     asChild
                     variant="secondary"
-                    className="h-auto min-h-12 w-full justify-between rounded-[1.35rem] px-4 py-3 text-left"
+                    className="h-auto min-h-12 w-full justify-between whitespace-normal rounded-[1.35rem] px-3 py-3 text-left"
                   >
                     <Link href={tile.href}>
                       <span>{tile.cta}</span>

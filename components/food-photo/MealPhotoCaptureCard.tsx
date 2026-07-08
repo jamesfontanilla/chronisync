@@ -1,11 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
-import { Camera, CircleCheckBig, Loader2, Sparkles } from "lucide-react";
+import { Camera, CircleCheckBig, Loader2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -377,24 +375,6 @@ export function MealPhotoCaptureCard({
             Analyzing the meal photo...
           </div>
         ) : null}
-
-        <div className="grid gap-3 rounded-[1.5rem] border border-[color:var(--ui-border)] bg-[color:var(--ui-surface-strong)] p-4 text-sm leading-6 text-[color:var(--ui-muted)]">
-          <div className="flex items-center gap-2 font-semibold text-[color:var(--ui-text)]">
-            <Sparkles className="h-4 w-4 text-[color:var(--ui-accent)]" />
-            What happens next
-          </div>
-          <p className="m-0">
-            The photo is analyzed directly using AI – no image is stored until
-            you decide to save the record.
-          </p>
-          <p className="m-0">
-            If the capture is unclear, you can switch straight to the manual
-            entry fallback instead.
-          </p>
-          <Button asChild variant="secondary" className="w-fit">
-            <Link href="#manual-entry">Open manual fallback</Link>
-          </Button>
-        </div>
 
         {successMessage ? (
           <div className="rounded-[1.5rem] border border-[color:var(--ui-border)] bg-[color:var(--ui-surface-strong)] px-4 py-3 text-sm leading-6 text-[color:var(--ui-text)]">
