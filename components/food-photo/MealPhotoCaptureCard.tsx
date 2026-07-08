@@ -22,11 +22,6 @@ import {
   foodPhotoAnalysisDraftSchema,
   type FoodPhotoAnalysisDraft,
 } from "@/features/ai/validation";
-import {
-  buildPatientFoodPhotoPath,
-  deleteFile,
-  uploadFile,
-} from "@/lib/firebase/storage";
 import { humanize } from "@/lib/utils";
 
 interface MealPhotoCaptureCardProps {
@@ -45,12 +40,29 @@ function sanitizeFileName(value: string): string {
 function deriveMealLabel(file: File): string {
   const baseName = file.name.replace(/\.[^/.]+$/, "");
   const cleaned = baseName.replace(/[-_]+/g, " ").trim();
-
   return cleaned ? humanize(cleaned) : "Meal photo";
 }
 
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => {
+      const result = reader.result as string;
+      const base64 = result.split(",")[1];
+      if (!base64) {
+        reject(new Error("Failed to extract base64 data."));
+        return;
+      }
+      resolve(base64);
+    };
+    reader.onerror = () => reject(new Error("Failed to read file."));
+  });
+}
+
+
 async function analyzeMealPhoto(
-  imageUrl: string,
+  imageBase64: string,
   patientId: string,
   fileName: string,
   mimeType: string,
@@ -67,7 +79,7 @@ async function analyzeMealPhoto(
         patientId,
         fileName,
         mimeType,
-        imageUrl,
+        imageBase64,
         mealLabelHint,
       },
     }),
@@ -77,7 +89,6 @@ async function analyzeMealPhoto(
     const body = (await response.json().catch(() => null)) as {
       error?: string;
     } | null;
-
     throw new Error(body?.error ?? "We could not analyze the meal photo yet.");
   }
 
@@ -92,10 +103,8 @@ export function MealPhotoCaptureCard({
   patientId = "demo-patient",
 }: MealPhotoCaptureCardProps) {
   const previewUrlRef = useRef<string | null>(null);
-  const uploadedImagePathRef = useRef<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | undefined>();
-  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<FoodPhotoAnalysisDraft | null>(null);
   const [open, setOpen] = useState(false);
   const [mealType, setMealType] = useState<FoodPhotoMealType>("other");
@@ -186,19 +195,7 @@ export function MealPhotoCaptureCard({
     selectedFile,
   ]);
 
-  const clearSelection = async (deleteRemote = true) => {
-    if (deleteRemote && uploadedImagePathRef.current) {
-      try {
-        await deleteFile(uploadedImagePathRef.current);
-      } catch {
-        // Ignore cleanup failures for a discarded draft.
-      } finally {
-        uploadedImagePathRef.current = null;
-      }
-    } else {
-      uploadedImagePathRef.current = null;
-    }
-
+  const clearSelection = async () => {
     if (previewUrlRef.current) {
       URL.revokeObjectURL(previewUrlRef.current);
       previewUrlRef.current = null;
@@ -206,7 +203,6 @@ export function MealPhotoCaptureCard({
 
     setSelectedFile(null);
     setPreviewUrl(undefined);
-    setUploadedImageUrl(null);
     setAnalysis(null);
     setOpen(false);
     setMealType("other");
@@ -232,23 +228,12 @@ export function MealPhotoCaptureCard({
 
     setSelectedFile(file);
     setPreviewUrl(nextPreviewUrl);
-    const fileName = sanitizeFileName(file.name || "meal-photo.jpg");
-    const storagePath = buildPatientFoodPhotoPath(
-      patientId,
-      `${Date.now()}-${fileName}`,
-    );
-
-    uploadedImagePathRef.current = storagePath;
 
     try {
-      const imageUrl = await uploadFile(storagePath, file, {
-        contentType: file.type || "image/jpeg",
-      });
-
-      setUploadedImageUrl(imageUrl);
+      const base64 = await fileToBase64(file);
 
       const draft = await analyzeMealPhoto(
-        imageUrl,
+        base64,
         patientId,
         file.name,
         file.type || "image/jpeg",
@@ -264,7 +249,6 @@ export function MealPhotoCaptureCard({
       const fallbackMealLabel = deriveMealLabel(file);
 
       setAnalysis(null);
-      setUploadedImageUrl(null);
       setMealLabel(fallbackMealLabel);
       setMealType("other");
       setPortionLabel("");
@@ -287,7 +271,7 @@ export function MealPhotoCaptureCard({
     notes?: string;
     status: "draft" | "confirmed";
   }) => {
-    if (!selectedFile || !uploadedImageUrl) {
+    if (!selectedFile) {
       throw new Error("Please capture a photo before saving.");
     }
 
@@ -302,7 +286,7 @@ export function MealPhotoCaptureCard({
         mealType: payload.mealType,
         mealLabel: payload.mealLabel,
         imageName: fileName,
-        imageUrl: uploadedImageUrl,
+        imageUrl: "",
         source: "photo",
         status: payload.status,
         ...(previewRecord?.confidence !== undefined
@@ -330,7 +314,7 @@ export function MealPhotoCaptureCard({
 
       await createFoodPhotoRecordAction(recordInput);
 
-      await clearSelection(false);
+      await clearSelection();
       setSuccessMessage(
         payload.status === "confirmed"
           ? "Meal photo saved."
@@ -360,8 +344,8 @@ export function MealPhotoCaptureCard({
             </div>
             <CardTitle className="text-2xl">Capture meal photo</CardTitle>
             <CardDescription>
-              Open the camera, review the draft, then confirm or save it as a
-              draft before it reaches the timeline.
+              Take a photo and let AI estimate nutrition. No uploads until you
+              save.
             </CardDescription>
           </div>
         </div>
