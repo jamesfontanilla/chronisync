@@ -73,7 +73,7 @@ export function DashboardWorkspace({
               <TriangleAlert size={18} />
             </div>
 
-            <div className="grid gap-2">
+            <div className="grid gap-2 pr-12 sm:pr-0">
               <div className="flex flex-wrap items-center gap-2">
                 <CardTitle className="text-xl font-semibold text-[color:var(--ui-warning)]">
                   Clinical Alert: CKD & Diabetes Comorbid Risk

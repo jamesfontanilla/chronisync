@@ -79,11 +79,9 @@ export function BottomNav({ className }: BottomNavProps) {
               aria-current={active ? "page" : undefined}
               className={cn(
                 "patient-nav__item grid justify-items-center gap-1 rounded-[1.45rem] px-2 py-2 text-center text-xs font-medium transition duration-200",
-                item.accent
-                  ? "bg-[color:var(--ui-accent-soft)] text-[color:var(--ui-accent)] shadow-[0_10px_26px_rgba(11,101,116,0.16)]"
-                  : active
-                    ? "bg-[color:var(--ui-accent-soft)] text-[color:var(--ui-accent)]"
-                    : "text-[color:var(--ui-muted)] hover:bg-[color:var(--ui-accent-soft)] hover:text-[color:var(--ui-accent)]"
+                active || item.accent
+                  ? "text-[color:var(--ui-accent)]"
+                  : "text-[color:var(--ui-muted)] hover:text-[color:var(--ui-accent)]"
               )}
             >
               <span
@@ -92,7 +90,7 @@ export function BottomNav({ className }: BottomNavProps) {
                   item.accent
                     ? "bg-[color:var(--ui-accent-fill)] text-[#1a1a1a] shadow-[0_8px_18px_rgba(0,0,0,0.2)]"
                     : active
-                      ? "border-[color:var(--ui-accent)] bg-white/70 text-[color:var(--ui-accent)]"
+                      ? "bg-transparent text-[color:var(--ui-accent)]"
                       : "bg-transparent text-[color:var(--ui-muted)]"
                 )}
               >
@@ -103,41 +101,6 @@ export function BottomNav({ className }: BottomNavProps) {
           );
         })}
       </div>
-
-      <style jsx>{`
-        .patient-nav {
-          position: fixed;
-          left: 50%;
-          bottom: calc(1rem + env(safe-area-inset-bottom));
-          transform: translateX(-50%);
-          padding-inline: 0.5rem;
-        }
-
-        .patient-nav__item {
-          min-height: 4.75rem;
-        }
-
-        .patient-nav__item[aria-current="page"] {
-          transform: translateY(-1px);
-        }
-
-        .patient-nav__item:hover .patient-nav__icon {
-          transform: translateY(-1px);
-        }
-
-        @media (max-width: 640px) {
-          .patient-nav {
-            width: min(calc(100% - 0.75rem), 42rem);
-            bottom: calc(0.75rem + env(safe-area-inset-bottom));
-            padding-inline: 0;
-          }
-
-          .patient-nav__item {
-            min-height: 4.5rem;
-            padding-inline: 0.35rem;
-          }
-        }
-      `}</style>
     </nav>
   );
 }
