@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -28,6 +29,8 @@ const SCRIPTED_RESPONSES: Record<string, string> = {
 };
 
 export function ChatBot() {
+  const pathname = usePathname();
+  const hasBottomNav = pathname.startsWith("/patient");
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -85,7 +88,11 @@ export function ChatBot() {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
+    <div
+      className={`chatbot-fab fixed bottom-6 right-6 z-50 flex flex-col items-end${
+        hasBottomNav ? " chatbot-fab--with-nav" : ""
+      }`}
+    >
       {isOpen && (
         <Card className="w-[350px] sm:w-[400px] h-[500px] flex flex-col shadow-2xl border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 mb-4 animate-in slide-in-from-bottom-5">
           <CardHeader className="border-b px-4 py-3 bg-muted/30 flex flex-row items-center justify-between space-y-0">
@@ -172,9 +179,9 @@ export function ChatBot() {
         <Button
           onClick={() => setIsOpen(true)}
           size="icon"
-          className="h-14 w-14 rounded-full shadow-2xl hover:scale-105 transition-transform"
+          className="h-11 w-11 rounded-full shadow-2xl hover:scale-105 transition-transform"
         >
-          <MessageCircle className="w-6 h-6" />
+          <MessageCircle className="w-5 h-5" />
         </Button>
       )}
     </div>
