@@ -32,6 +32,7 @@ import type { User as FirebaseUser } from "firebase/auth";
 type AccountMenuProps = {
   className?: string;
   compact?: boolean;
+  variant?: "pill" | "greeting";
 };
 
 function getInitials(value: string | null | undefined): string {
@@ -65,13 +66,18 @@ function getSettingsPath(role: UserRole | null): string {
   return ROUTES.PATIENT.SETTINGS;
 }
 
-export function AccountMenu({ className, compact = false }: AccountMenuProps) {
+export function AccountMenu({
+  className,
+  compact = false,
+  variant = "pill",
+}: AccountMenuProps) {
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [hasMounted, setHasMounted] = useState(false);
-  const role = getRoleCookie();
+  const [role, setRole] = useState<UserRole | null>(null);
 
   useEffect(() => {
     setUser(getCurrentUser());
+    setRole(getRoleCookie());
     setHasMounted(true);
 
     const unsubscribe = observeAuthState((nextUser) => {
@@ -96,34 +102,59 @@ export function AccountMenu({ className, compact = false }: AccountMenuProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button
-          type="button"
-          aria-label={triggerLabel}
-          className={cn(
-            "inline-flex items-center gap-3 rounded-full border border-[color:var(--ui-border)] bg-[color:var(--ui-surface-strong)] px-3 py-2 text-left shadow-[0_14px_32px_rgba(9,30,36,0.12)] backdrop-blur-xl transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ui-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--ui-bg)]",
-            compact && "px-2.5 py-2",
-            className
-          )}
-        >
-          <Avatar className="h-10 w-10">
-            <AvatarFallback>{initials}</AvatarFallback>
-          </Avatar>
-
-          {!compact ? (
-            <span className="grid min-w-0">
-              <strong className="truncate text-sm font-semibold leading-5 text-[color:var(--ui-text)]">
-                {displayName}
-              </strong>
-              {detailLabel ? (
-                <span className="truncate text-xs leading-5 text-[color:var(--ui-muted)]">
-                  {detailLabel}
+        {variant === "greeting" ? (
+          <button
+            type="button"
+            aria-label={triggerLabel}
+            className={cn(
+              "flex items-center gap-3 rounded-2xl text-left transition hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ui-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--ui-bg)]",
+              className
+            )}
+          >
+            <Avatar className="h-11 w-11">
+              <AvatarFallback>{initials}</AvatarFallback>
+            </Avatar>
+            <span className="grid min-w-0 gap-0.5">
+              <span className="truncate text-lg font-semibold leading-6 text-[color:var(--ui-text)]">
+                Hi, {displayName}
+              </span>
+              {role ? (
+                <span className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--ui-accent)]">
+                  {getRoleLabel(role)}
                 </span>
               ) : null}
             </span>
-          ) : null}
+          </button>
+        ) : (
+          <button
+            type="button"
+            aria-label={triggerLabel}
+            className={cn(
+              "inline-flex items-center gap-3 rounded-full border border-[color:var(--ui-border)] bg-[color:var(--ui-surface-strong)] px-3 py-2 text-left shadow-[0_14px_32px_rgba(9,30,36,0.12)] backdrop-blur-xl transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ui-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--ui-bg)]",
+              compact && "px-2.5 py-2",
+              className
+            )}
+          >
+            <Avatar className="h-10 w-10">
+              <AvatarFallback>{initials}</AvatarFallback>
+            </Avatar>
 
-          <ChevronDown size={16} className="shrink-0 text-[color:var(--ui-muted)]" />
-        </button>
+            {!compact ? (
+              <span className="grid min-w-0">
+                <strong className="truncate text-sm font-semibold leading-5 text-[color:var(--ui-text)]">
+                  {displayName}
+                </strong>
+                {detailLabel ? (
+                  <span className="truncate text-xs leading-5 text-[color:var(--ui-muted)]">
+                    {detailLabel}
+                  </span>
+                ) : null}
+              </span>
+            ) : null}
+
+            <ChevronDown size={16} className="shrink-0 text-[color:var(--ui-muted)]" />
+          </button>
+        )}
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end" sideOffset={10} className="min-w-[16rem]">
